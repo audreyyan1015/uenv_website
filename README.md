@@ -211,3 +211,9 @@ cargo test
 ## License
 
 Apache-2.0
+
+
+nohup python3 -m http.server 8777 \
+  --bind 0.0.0.0 \
+  --directory /home/uenv-release-website/website \
+  >/tmp/uenv-release-website-8777.log 2>&1 </dev/null &

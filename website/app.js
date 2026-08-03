@@ -68,8 +68,8 @@ copyButton?.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(code);
     const label = copyButton.querySelector('span');
-    if (label) label.textContent = 'Copied';
-    setTimeout(() => { if (label) label.textContent = 'Copy'; }, 1600);
+    if (label) label.textContent = '已复制';
+    setTimeout(() => { if (label) label.textContent = '复制'; }, 1600);
   } catch {
     const selection = window.getSelection();
     const range = document.createRange();
