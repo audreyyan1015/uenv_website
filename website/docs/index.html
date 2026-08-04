@@ -99,7 +99,7 @@
             <span class="status-dot"></span>
             <div>
               <strong>使用文档预览版</strong>
-              <span>基于当前 bridge-alignment</span>
+              <span>基于 uenv main 分支 · 更新于 2026-08-04</span>
             </div>
           </div>
         </div>
@@ -120,7 +120,7 @@
           <section class="doc-section hero-section is-current-page" id="overview" data-title="概览">
             <h1>统一环境接口，<br />让训练专注于训练。</h1>
             <p class="hero-copy">
-              UEnv 是一个训练框架无关的分布式环境执行框架，为 LLM 后训练提供统一、可扩展的 Environment 接口。
+              UEnv 为 LLM 后训练提供统一的环境执行接口。当前已接入 VeRL，整体架构可以继续适配其他训练框架。
             </p>
             <div class="hero-actions">
               <a class="button primary" href="?page=quick-start">
@@ -136,7 +136,7 @@
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 4v6M17 14v6M4 17h16" /></svg>
                 </div>
                 <h3>框架解耦</h3>
-                <p>通过 Bridge 对接 VeRL 等训练框架，训练侧不需要感知 Worker 与环境插件细节。</p>
+                <p>当前通过 Bridge 对接 VeRL，训练侧不需要了解 Worker 和环境插件的内部实现。</p>
               </div>
               <div class="feature-card">
                 <div class="feature-icon green">
@@ -150,7 +150,7 @@
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V8m5 10V4m6 14v-7m5 7V6" /></svg>
                 </div>
                 <h3>可观测可靠</h3>
-                <p>围绕注册、心跳、Dispatch、Report 和 WAL 构建可追踪、可恢复的执行链路。</p>
+                <p>记录组件注册、心跳、任务状态和执行结果，便于查询问题并恢复部分运行状态。</p>
               </div>
             </div>
 
@@ -226,90 +226,91 @@ UENV_SERVER_ENDPOINT=127.0.0.1:50051 \
 
           <section class="doc-section" id="workflow" data-title="使用流程">
             <h2>一次环境执行的基本路径</h2>
-            <p class="lead">以下是普通 Native Worker 路径。SWE Agent 和 Code Agent 走不同的资源获取与任务分发流程，见 uenv-server 页面。</p>
+            <p class="lead">当前已接入 VeRL。下面以默认的 Native Worker 路径说明一次请求如何完成。</p>
             <div class="steps">
-              <div class="step"><span>1</span><div><h3>准备请求</h3><p>Bridge 将 prompt、采样参数、奖励配置与环境元数据组装为 EpisodeRequest。</p></div></div>
-              <div class="step"><span>2</span><div><h3>排队并选择 Worker</h3><p>Server 先取得 admission 名额，再过滤 draining、degraded、环境类型、资源、环境包和容量不匹配的 Worker。</p></div></div>
-              <div class="step"><span>3</span><div><h3>执行环境</h3><p>Worker 获取或拉起环境实例，完成 reset → step → close，并直接访问推理服务。</p></div></div>
-              <div class="step"><span>4</span><div><h3>返回轨迹</h3><p>执行结果经 ReportResult 汇总为 EpisodeResult，回到 Bridge 并进入后续训练。</p></div></div>
+              <div class="step"><span>1</span><div><h3>训练框架提交样本</h3><p>VeRL 把 prompt、采样参数和环境配置交给 Bridge。</p></div></div>
+              <div class="step"><span>2</span><div><h3>Bridge 转换请求</h3><p>Bridge 将训练框架的数据转换为 UEnv 的 Episode 请求，并通过 gRPC 发送给 Adapter Core。</p></div></div>
+              <div class="step"><span>3</span><div><h3>Server 选择 Worker</h3><p>Adapter Core 调用进程内的 Server 模块。Server 控制并发，并选择支持该环境且有空闲容量的 Worker。</p></div></div>
+              <div class="step"><span>4</span><div><h3>Worker 执行环境</h3><p>Worker 准备环境实例，完成模型生成和环境交互，并计算奖励与轨迹。</p></div></div>
+              <div class="step"><span>5</span><div><h3>结果返回训练</h3><p>Worker 回报结果，Server 完成校验和记录，Adapter Core 与 Bridge 再把结果返回 VeRL。</p></div></div>
             </div>
           </section>
 
           <section class="doc-section" id="configuration" data-title="配置说明">
             <h2>配置说明</h2>
-            <p class="lead">配置按组件拆分。Server 与 Worker 使用各自的运行时配置，Hub 使用 TOML，并支持环境变量覆盖。</p>
+            <p class="lead">UEnv 的组件分别读取自己的配置。初次运行时，主要确认监听地址、Worker 连接地址和 Hub 地址。</p>
             <div class="config-table-wrap">
               <table class="config-table">
-                <thead><tr><th>组件</th><th>入口</th><th>主要配置域</th></tr></thead>
+                <thead><tr><th>组件</th><th>主要入口</th><th>初次使用时重点确认</th></tr></thead>
                 <tbody>
-                  <tr><td><code>uenv-adapter-core / server</code></td><td><code>UENV_CONFIG_PATH</code>、<code>UENV_ADDR</code></td><td>scheduler、episode、persistence、admin HTTP</td></tr>
-                  <tr><td><code>uenv-worker</code></td><td><code>--config &lt;yaml&gt;</code></td><td>server、worker、env、pool、wal、hub、llm、runtime_gateway、swe、observability</td></tr>
-                  <tr><td><code>uenv-hub</code></td><td><code>--config &lt;toml&gt;</code> 或 <code>UENV_HUB_CONFIG</code></td><td>server、database、auth、rate limit、CORS、packages</td></tr>
+                  <tr><td><code>uenv-adapter-core</code></td><td><code>UENV_ADDR</code>、<code>UENV_CONFIG_PATH</code></td><td>主 gRPC 地址、并发限制、是否启用持久化</td></tr>
+                  <tr><td><code>uenv-worker</code></td><td><code>--config &lt;yaml&gt;</code></td><td>Server 地址、Worker 对外地址、支持的环境和容量</td></tr>
+                  <tr><td><code>uenv-hub</code></td><td><code>--config &lt;toml&gt;</code> 或环境变量</td><td>HTTP 地址、数据库和鉴权配置</td></tr>
                 </tbody>
               </table>
             </div>
             <div class="callout note">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>Server 配置边界</strong><span><code>UENV_ADDR</code> 决定 Adapter Core 的 gRPC 监听地址；当前 <code>server.yaml</code> 中的 <code>port</code> 字段不控制该监听端口。普通加载模式只在配置文件不存在时回退默认值，文件存在但内容非法仍会启动失败；设置 <code>UENV_SERVER_CONFIG_STRICT=1</code> 后，文件不存在也会报错。</span></div>
+              <div><strong>端口由不同配置项控制</strong><span><code>UENV_ADDR</code> 控制 Adapter Core 的主 gRPC 地址。<code>server.yaml</code> 主要配置 Server 模块的调度、状态和管理接口，不负责设置这个主监听地址。</span></div>
             </div>
           </section>
 
           <section class="doc-section architecture-section" id="architecture" data-title="架构总览">
             <h2>系统架构总览</h2>
-            <p class="lead">UEnv 通过四层解耦，把训练接入、控制面调度、环境执行和环境注册分离。</p>
-
+            <p class="lead">UEnv 把训练框架接入、任务调度、环境执行和环境管理分成独立组件。当前训练框架接入实现为 VeRL。</p>
             <div class="architecture-board docs-architecture-board">
               <div class="architecture-flow">
                 <article class="architecture-node">
                   <div class="architecture-logo">T</div>
-                  <h3>Training Framework</h3>
-                  <p>ROLL · VeRL · NeMo-RL · NexRL</p>
-                  <ul><li>生成 rollout 请求</li><li>消费环境执行结果</li></ul>
+                  <h3>VeRL</h3>
+                  <p>当前已接入的训练框架</p>
+                  <ul><li>提交 rollout 样本</li><li>接收奖励与轨迹</li></ul>
                 </article>
-                <div class="architecture-link link-blue"><span>Python API</span><i></i></div>
+                <div class="architecture-link link-blue"><span>Python 调用</span><i></i></div>
                 <article class="architecture-node is-highlighted">
                   <div class="architecture-logo">B</div>
                   <h3>uenv-bridge</h3>
-                  <p>训练框架适配器</p>
-                  <ul><li>请求 / 结果转换</li><li>嵌入训练进程</li></ul>
+                  <p>训练框架适配层</p>
+                  <ul><li>转换请求和结果</li><li>通过 gRPC 调用 Adapter Core</li></ul>
                 </article>
-                <div class="architecture-link link-blue"><span>L1 gRPC</span><i></i></div>
+                <div class="architecture-link link-blue"><span>gRPC</span><i></i></div>
                 <article class="architecture-node">
                   <div class="architecture-logo">S</div>
-                  <h3>uenv-server</h3>
-                  <p>嵌入式调度与状态模块</p>
-                  <ul><li>执行路径选择与容量控制</li><li>租约、终态与恢复状态</li></ul>
+                  <h3>Adapter Core / Server</h3>
+                  <p>网络入口与调度控制</p>
+                  <ul><li>Adapter Core 是运行进程</li><li>uenv-server 是进程内 Rust 库</li></ul>
                 </article>
-                <div class="architecture-link link-blue"><span>Dispatch</span><i></i></div>
+                <div class="architecture-link link-blue"><span>任务分发</span><i></i></div>
                 <article class="architecture-node is-highlighted">
                   <div class="architecture-logo">W</div>
                   <h3>uenv-worker</h3>
-                  <p>Worker Pool 执行层</p>
-                  <ul><li>实例池与任务执行</li><li>推理服务直连</li></ul>
+                  <p>环境执行层</p>
+                  <ul><li>运行环境实例</li><li>调用模型并回报结果</li></ul>
                 </article>
-                <div class="architecture-link link-green"><span>HTTP metadata</span><i></i></div>
+                <div class="architecture-link link-green"><span>按需 HTTP</span><i></i></div>
                 <article class="architecture-node">
                   <div class="architecture-logo">H</div>
                   <h3>uenv-hub</h3>
-                  <p>环境元数据注册中心</p>
-                  <ul><li>版本与 manifest 管理</li><li>HTTP API + SQLite</li></ul>
+                  <p>环境元数据与制品管理</p>
+                  <ul><li>管理环境版本和 Manifest</li><li>Worker 需要时查询或下载</li></ul>
                 </article>
               </div>
             </div>
 
+            <div class="callout note">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
+              <div><strong>两个容易混淆的边界</strong><span>Bridge 的 gRPC 请求先到 Adapter Core，再由 Adapter Core 调用进程内的 Server 模块。Hub 不是每次 Episode 的必经步骤，Worker 只在需要解析或同步环境包时访问 Hub。</span></div>
+            </div>
+
             <h3>组件之间如何通信</h3>
-            <p>下表列出当前源码实际注册的服务和调用方向。uenv-server 本身是库，网络服务由 Adapter Core 进程统一托管。</p>
             <div class="config-table-wrap protocol-table-wrap">
               <table class="config-table">
-                <thead><tr><th>边界</th><th>协议 / 服务</th><th>主要调用</th></tr></thead>
+                <thead><tr><th>通信方向</th><th>方式</th><th>传递内容</th></tr></thead>
                 <tbody>
-                  <tr><td>Python Bridge → Adapter Core</td><td><code>AdapterCoreService</code> · gRPC</td><td><code>ExecuteBatch</code>、<code>ExecuteBatchStream</code>、<code>HealthCheck</code></td></tr>
-                  <tr><td>Adapter Core → Server</td><td>进程内 <code>UEnvEpisodeService</code></td><td>请求转换后提交单个或批量 Episode</td></tr>
-                  <tr><td>Server → Worker</td><td><code>WorkerGrpcService</code> · gRPC</td><td><code>DispatchEpisode</code>、取消与健康检查</td></tr>
-                  <tr><td>Worker → Server</td><td><code>ControlPlaneService</code> · gRPC</td><td>注册、双向流心跳、<code>ReportResult</code></td></tr>
-                  <tr><td>Agent Pool → Server</td><td><code>AgentControlService</code> · gRPC</td><td>注册、心跳、拉取任务、完成任务</td></tr>
-                  <tr><td>Worker / CLI → Hub</td><td><code>/api/v1</code> · HTTP</td><td>解析版本、同步 EnvPackage、下载制品与查询 Stack</td></tr>
-                  <tr><td>Worker → Plugin</td><td>本地 RPC / UDS</td><td><code>health_check</code>、<code>reset</code>、<code>step</code>、<code>close</code></td></tr>
+                  <tr><td>Bridge → Adapter Core</td><td>gRPC</td><td>训练样本和执行结果</td></tr>
+                  <tr><td>Adapter Core → Server</td><td>进程内函数调用</td><td>Episode 请求和结果</td></tr>
+                  <tr><td>Server ↔ Worker / Agent</td><td>gRPC</td><td>注册、心跳、任务分发和结果回报</td></tr>
+                  <tr><td>Worker → Hub</td><td>HTTP，按需调用</td><td>环境版本、Manifest 和制品</td></tr>
                 </tbody>
               </table>
             </div>
@@ -317,306 +318,173 @@ UENV_SERVER_ENDPOINT=127.0.0.1:50051 \
 
           <section class="doc-section component-detail" id="uenv-bridge" data-title="uenv-bridge">
             <div class="component-heading"><span class="component-tag">PY</span><div><h2>uenv-bridge</h2><p>训练框架适配层</p></div></div>
-            <p class="lead">把 VeRL 等训练框架的 rollout 输入规范化为 UEnv 请求，并把 Episode 结果重新组装为训练框架可消费的样本结果。</p>
+            <p class="lead">uenv-bridge 当前面向 VeRL，把 VeRL 的 rollout 样本转换为 UEnv 请求，并把执行结果转换回 VeRL 可继续训练的数据。</p>
 
             <h3>主要职责</h3>
             <div class="detail-grid">
-              <div class="detail-card"><strong>训练框架接入</strong><p><code>UEnvAgentLoop</code> 嵌入 VeRL AgentLoop，在 rollout 阶段接管环境交互。</p></div>
-              <div class="detail-card"><strong>类型化转换</strong><p>把样本配置、模型端点、并行模式和环境包引用组装为 <code>SampleEnvelope</code>，再转换为 <code>EpisodeRequest</code>。</p></div>
-              <div class="detail-card"><strong>结果回填</strong><p>把 reward、trajectory、终止原因、rollout 版本和 logprob 映射回 <code>SampleResult</code>。</p></div>
+              <div class="detail-card"><strong>接入 VeRL</strong><p>在 VeRL 的 AgentLoop 阶段接收 prompt、采样参数和环境配置。</p></div>
+              <div class="detail-card"><strong>统一数据格式</strong><p>把训练侧数据转换成 UEnv 的 Episode 请求，避免训练框架直接依赖 Server 和 Worker 的内部结构。</p></div>
+              <div class="detail-card"><strong>回填训练结果</strong><p>把响应、奖励、轨迹和结束原因整理成 VeRL 能继续使用的结果。</p></div>
             </div>
 
             <h3>一次请求如何经过 Bridge</h3>
             <div class="steps compact-steps">
-              <div class="step"><span>1</span><div><h3>接收训练样本</h3><p>AgentLoop 读取 prompt、采样参数、环境配置与样本上下文。</p></div></div>
-              <div class="step"><span>2</span><div><h3>规范化请求</h3><p>Python 客户端生成 SampleEnvelope，避免把结构化协议字段塞进自由 metadata。</p></div></div>
-              <div class="step"><span>3</span><div><h3>调用 Adapter Core</h3><p>通过 ExecuteBatch 或双向流 ExecuteBatchStream 把样本交给 Rust Core。</p></div></div>
-              <div class="step"><span>4</span><div><h3>返回 rollout 结果</h3><p>Rust Core 汇总 EpisodeResult，Python 侧恢复训练框架需要的结果结构。</p></div></div>
+              <div class="step"><span>1</span><div><h3>接收样本</h3><p>VeRL 将当前 rollout 样本交给 UEnv AgentLoop。</p></div></div>
+              <div class="step"><span>2</span><div><h3>生成请求</h3><p>Bridge 整理 prompt、模型地址、采样参数和环境配置。</p></div></div>
+              <div class="step"><span>3</span><div><h3>调用 Adapter Core</h3><p>Bridge 通过本地 gRPC 发送请求。Adapter Core 再调用进程内的 Server 模块。</p></div></div>
+              <div class="step"><span>4</span><div><h3>返回 VeRL</h3><p>Bridge 收到 Episode 结果后，恢复成 VeRL 需要的数据结构。</p></div></div>
             </div>
 
-            <h3>关键实现</h3>
-            <div class="module-list">
-              <div><code>verl_agent_loop.py</code><span>VeRL AgentLoop 入口与训练侧配置</span></div>
-              <div><code>clients.py</code><span>Rust Adapter Core 客户端与 EpisodeClient 抽象</span></div>
-              <div><code>model_gateway.py</code><span>模型端点规范化与 OpenAI 兼容网关</span></div>
-              <div><code>core/src/core.rs</code><span>SampleEnvelope → EpisodeRequest 的类型化转换</span></div>
-              <div><code>core/src/service.rs</code><span>ExecuteBatch、流式执行与健康检查</span></div>
-            </div>
-
-            <div class="boundary-note"><strong>职责边界</strong><span>Bridge 不选择 Worker、不启动环境实例，也不管理 Hub 中的版本和制品。</span></div>
+            <div class="boundary-note"><strong>当前支持范围</strong><span>当前 Bridge 只维护 VeRL pre-rollout AgentLoop 路径。架构可以继续增加其他训练框架适配器，但页面不把尚未接入的框架列为现有能力。</span></div>
           </section>
 
           <section class="doc-section" id="data-flow" data-title="Episode 数据流">
             <h2>Episode 数据流</h2>
-            <p class="lead">下图只描述普通 Native Worker 路径：Episode 经 Server 分发到 Worker 与 Plugin，最终以类型化结果返回训练框架。</p>
+            <p class="lead">下面展示当前 VeRL 接入下的默认 Native Worker 路径。Adapter Core 是 gRPC 入口，Server 是它在进程内使用的调度模块。</p>
             <div class="sequence-card">
-              <div class="sequence-labels"><span>Bridge</span><span>Server</span><span>Worker</span><span>Plugin</span></div>
+              <div class="sequence-labels"><span>Bridge</span><span>Adapter Core / Server</span><span>Worker</span><span>Plugin</span></div>
               <div class="sequence-lanes">
-                <div class="sequence-line one"><i></i><b>SampleEnvelope</b></div>
-                <div class="sequence-line two"><i></i><b>DispatchEpisode</b></div>
+                <div class="sequence-line one"><i></i><b>Episode 请求</b></div>
+                <div class="sequence-line two"><i></i><b>任务分发</b></div>
                 <div class="sequence-line three"><i></i><b>reset / step / close</b></div>
-                <div class="sequence-line four reverse"><i></i><b>StepResult</b></div>
-                <div class="sequence-line five reverse"><i></i><b>ReportResult</b></div>
-                <div class="sequence-line six reverse"><i></i><b>SampleResult</b></div>
+                <div class="sequence-line four reverse"><i></i><b>环境结果</b></div>
+                <div class="sequence-line five reverse"><i></i><b>结果回报</b></div>
+                <div class="sequence-line six reverse"><i></i><b>训练结果</b></div>
               </div>
             </div>
             <div class="callout note">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>结果回报不是 Dispatch 的简单返回值</strong><span>Worker 可以在 DispatchEpisode 流中发送进度；最终结果通过 ControlPlaneService.ReportResult 独立回报，并使用 lease、token 与幂等键校验。</span></div>
+              <div><strong>任务分发和最终结果回报是两个步骤</strong><span>Server 先把任务交给 Worker。Worker 完成后再单独回报最终结果，Server 会确认该结果属于当前任务，再返回给训练侧。</span></div>
             </div>
           </section>
 
           <section class="doc-section component-detail" id="uenv-server" data-title="uenv-server">
             <div class="component-heading"><span class="component-tag rust">RS</span><div><h2>uenv-server</h2><p>Episode 调度与运行状态管理</p></div></div>
-            <p class="lead">uenv-server 接收 Episode 请求，控制并发，选择 Worker 或 Agent 执行路径，校验最终结果，并保存任务状态。环境的实际执行发生在 Worker 或 Agent 中，不在 Server 进程中。</p>
+            <p class="lead">VeRL 先把训练样本交给 uenv-bridge。Bridge 将数据转换为 Episode，并通过 gRPC 发送给 Adapter Core。Adapter Core 是对外运行的服务进程，它在进程内调用 uenv-server 完成调度。uenv-server 负责控制并发、选择 Worker 或 Agent、跟踪任务状态并返回结果。</p>
 
-            <h3>基本对象</h3>
-            <p>UEnv 是分布式任务执行系统：上游提交任务，远端进程执行任务，Server 负责协调执行过程。</p>
+            <div class="callout note">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
+              <div><strong>uenv-server 不是单独启动的进程</strong><span><code>uenv-server</code> 是 Rust 库，由 <code>uenv-adapter-core</code> 在进程内创建和调用。对外监听 gRPC 端口的是 Adapter Core 进程。</span></div>
+            </div>
+
+            <h3>先认识四个概念</h3>
             <div class="config-table-wrap protocol-table-wrap">
               <table class="config-table">
-                <thead><tr><th>名称</th><th>在本文中的含义</th></tr></thead>
+                <thead><tr><th>名称</th><th>含义</th></tr></thead>
                 <tbody>
-                  <tr><td><code>Episode</code></td><td>Server 调度和记录的任务单位。一次 Episode 从收到请求开始，到完成、失败、取消或超时结束。它可以包含一个或多个环境交互步骤。</td></tr>
-                  <tr><td><code>Environment</code></td><td>接收操作并返回观测、奖励和结束状态的程序。它可以实现问答、代码测试或容器化软件任务。</td></tr>
-                  <tr><td><code>Worker</code></td><td>运行 Environment 和环境插件的独立进程。Worker 向 Server 注册支持的环境类型、资源、容量和网络地址。</td></tr>
-                  <tr><td><code>Bridge</code></td><td>把 VeRL 等上游框架的数据转换成 UEnv 的 <code>EpisodeRequest</code>，并把 <code>EpisodeResult</code> 转换回上游格式。</td></tr>
-                  <tr><td><code>Agent</code></td><td>从 Server 拉取 AgentJob 并执行多步操作的外部程序，例如修改代码和运行测试。这里的 Agent 是运行时组件，不表示某个强化学习算法。</td></tr>
+                  <tr><td><code>Episode</code></td><td>一次完整的环境执行任务，从收到请求开始，到完成、失败、取消或超时结束。</td></tr>
+                  <tr><td><code>Environment</code></td><td>接收操作并返回观测、奖励和结束状态的程序，例如数学问答环境或代码测试环境。</td></tr>
+                  <tr><td><code>Worker</code></td><td>运行环境实例的独立进程。它向 Server 报告自己支持的环境、资源和空闲容量。</td></tr>
+                  <tr><td><code>Agent</code></td><td>执行多步工具操作的外部程序，主要用于需要修改代码、运行测试等任务。</td></tr>
                 </tbody>
               </table>
             </div>
 
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>uenv-server 不是单独启动的程序</strong><span>仓库里的 <code>uenv-server</code> 是 Rust 库。真正启动的是 <code>uenv-adapter-core</code>；它在进程内创建 Server 状态，并把训练请求、Worker 控制面、Agent 控制面和管理接口注册到 gRPC Server。</span></div>
+            <h3>主要职责</h3>
+            <div class="detail-grid">
+              <div class="detail-card"><strong>管理请求</strong><p>识别重复请求，限制同时执行的 Episode 数量，并处理取消和超时。</p></div>
+              <div class="detail-card"><strong>选择执行资源</strong><p>根据环境类型、资源、健康状态和空闲容量选择合适的 Worker；特殊任务也可以交给 Agent。</p></div>
+              <div class="detail-card"><strong>管理结果与状态</strong><p>确认结果来自正确的任务分发，保存任务终态，并把结果返回 Adapter Core。</p></div>
             </div>
 
-            <h3>Server 按当前代码实际执行的流程</h3>
-            <p>流程节点按照当前代码中的函数调用和状态变化排列。标有“启用持久化时”的步骤仅在配置状态库后执行。</p>
-            <div class="server-flowchart" role="group" aria-label="uenv-server 从接收任务到返回结果的完整执行流程">
-              <div class="server-flow-roleline">
-                <strong>参与对象</strong>
-                <span><b>任务</b> 是一次需要处理的请求；<b>Server</b> 接收并安排任务；<b>Worker</b> 运行指定环境；<b>Agent</b> 执行修改代码、运行测试或调用工具等多步操作。</span>
-              </div>
-              <section class="server-flow-scope common" aria-label="所有请求共同执行的入口步骤">
-                <header><strong>所有请求共同执行</strong><span><code>submit_episode</code> → <code>execute_episode_inner</code></span></header>
-                <ol class="server-flow-steps common-steps">
-                  <li><strong>规范化任务标识、运行模式和异步请求信息</strong></li>
-                  <li><strong>查询或创建任务记录，处理重复提交和相同任务 ID 的等待调用</strong></li>
-                  <li><strong>登记活动任务，计算截止时间并等待 Server 全局执行名额</strong></li>
-                  <li><strong>选择 SWE Agent、Code Agent 或默认的 Native Worker 后端</strong></li>
-                </ol>
-              </section>
+            <h3>职责边界</h3>
+            <p>Server 负责调度、并发控制和状态管理；Worker 或 Agent 负责实际执行；Hub 负责环境版本和制品。Server 不直接执行环境的 <code>reset / step / close</code>。</p>
 
-              <div class="server-flow-route-arrow branch" aria-label="选择一条执行路径">
-                <span>选择一条执行路径</span>
-              </div>
-
-              <div class="server-flow-branches" aria-label="三个互斥的执行后端">
-                <article class="server-flow-path native">
-                  <header><strong>Native Worker 路径：4 个阶段</strong><span>Server 直接选择 Worker，并调用 Worker 执行环境</span></header>
-                  <ol class="server-flow-steps path-steps">
-                    <li><strong>选择 Worker，并准备 lease、结果通道和派发记录</strong></li>
-                    <li><strong>调用 Worker 启动环境执行</strong></li>
-                    <li><strong>Worker 独立回报；Server 校验身份、派发凭据和重复结果后提交结果</strong></li>
-                    <li><strong>返回结果；临时派发错误可重试，环境失败、取消或超时直接结束</strong></li>
-                  </ol>
-                </article>
-
-                <article class="server-flow-path swe">
-                  <header><strong>SWE Agent 路径：5 个阶段</strong><span>同时需要 Agent 名额和带 Runtime Gateway 的 Worker</span></header>
-                  <ol class="server-flow-steps path-steps">
-                    <li><strong>解析 Agent Pool，同时取得 Agent 名额和匹配的 Worker</strong></li>
-                    <li><strong>通过 Worker Gateway 创建并保存本次运行会话</strong></li>
-                    <li><strong>生成 Agent Job，先保存再加入任务队列</strong></li>
-                    <li><strong>等待 Agent 领取并完成，同时处理领取超时、总超时和取消</strong></li>
-                    <li><strong>释放 Worker、关闭会话并发布最终结果</strong></li>
-                  </ol>
-                </article>
-
-                <article class="server-flow-path code-agent">
-                  <header><strong>Code Agent 路径：4 个阶段</strong><span>只使用 ToolEnv Agent Pool，不选择 Worker，也不创建 Gateway 会话</span></header>
-                  <ol class="server-flow-steps path-steps">
-                    <li><strong>解析 ToolEnv Agent Pool 并等待可用名额</strong></li>
-                    <li><strong>登记活动任务，把无 Gateway 的 Agent Job 加入内存队列</strong></li>
-                    <li><strong>Agent 领取并执行；Server 同时处理领取超时、总超时和取消</strong></li>
-                    <li><strong>清理活动记录和 Job，并发布最终结果</strong></li>
-                  </ol>
-                </article>
-              </div>
-
-              <div class="server-flow-route-arrow merge" aria-label="执行后端返回">
-                <span>执行后端返回</span>
-              </div>
-
-              <section class="server-flow-scope final" aria-label="执行后端返回后的协调器处理">
-                <header><strong>执行后端返回以后</strong><span>这一段只适用于启用了持久化和 EpisodeCoordinator 的提交入口</span></header>
-                <ol class="server-flow-steps final-steps">
-                  <li><strong>检查结果大小并提交最终任务记录</strong></li>
-                  <li><strong>通知相同任务 ID 的等待者，移除协调记录并返回结果</strong></li>
-                </ol>
-              </section>
-            </div>
-
-            <h3>用一个普通任务看完整流程</h3>
-            <p>假设上游要执行一个问答任务：“2 + 3 等于多少？”在默认的 Native Worker 路径中，程序会经历下面这些步骤。</p>
+            <h3>默认的 Native Worker 流程</h3>
+            <p>Native Worker 是普通环境任务的默认路径。一次请求按下面的顺序执行：</p>
             <div class="steps compact-steps">
-              <div class="step"><span>1</span><div><h3>上游提交任务</h3><p>Bridge 把题目、任务 ID、环境类型和超时时间等信息整理成 <code>EpisodeRequest</code>，交给同一进程中的 Server。</p></div></div>
-              <div class="step"><span>2</span><div><h3>Server 登记任务</h3><p>Server 检查这个 <code>episode_id</code> 是否已经出现过。若同一个任务正在执行，新调用会等待原来的执行；若同一 ID 对应的内容不同，Server 会拒绝它。</p></div></div>
-              <div class="step"><span>3</span><div><h3>等待并发许可</h3><p>Server 使用 semaphore 实现 admission 并发控制。请求必须先取得 permit；等待期间如果达到 Episode deadline 或收到取消信号，请求不会进入执行后端。</p></div></div>
-              <div class="step"><span>4</span><div><h3>选择 Worker</h3><p>Server 找到支持该环境、资源足够、仍有空闲容量且心跳正常的 Worker，并为这次分配临时占用一个名额。</p></div></div>
-              <div class="step"><span>5</span><div><h3>下发任务</h3><p>Server 为本次分发生成 lease、token 和过期时间，先把分发意图写入状态库，再调用 Worker 的 <code>DispatchEpisode</code>。</p></div></div>
-              <div class="step"><span>6</span><div><h3>Worker 执行环境</h3><p>Worker 调用环境插件的 <code>reset</code>、<code>step</code> 和 <code>close</code>。它可以在执行流中发送进度，但最终结果通过独立的 <code>ReportResult</code> 接口回报。</p></div></div>
-              <div class="step"><span>7</span><div><h3>Server 保存并返回结果</h3><p>Server 验证回报确实属于这次分发，提交终态并通知等待者。Adapter Core 再把结果返回给 Bridge，上游得到答案、轨迹和分数。</p></div></div>
-            </div>
-
-            <h3>几个容易混淆的机制</h3>
-            <div class="config-table-wrap protocol-table-wrap">
-              <table class="config-table">
-                <thead><tr><th>代码中的词</th><th>作用</th><th>具体行为</th></tr></thead>
-                <tbody>
-                  <tr><td><code>admission</code></td><td>限制已经进入执行流程的 Episode 数量</td><td>请求异步等待 semaphore permit；完成、取消或失败后释放 permit。</td></tr>
-                  <tr><td><code>reservation</code></td><td>记录 Server 已分配但 Worker 心跳可能尚未反映的负载</td><td>选择 Worker 时增加 <code>reserved_load</code>，执行结束时减少；有效负载取 reservation 与 Worker 上报负载的较大值。</td></tr>
-                  <tr><td><code>lease</code> 与 token</td><td>把最终结果绑定到某一次具体分发</td><td>每个 attempt 生成新的 lease ID 和随机 token；ReportResult 的 Worker、lease 和 token 必须与待回报记录一致。</td></tr>
-                  <tr><td><code>server_epoch</code></td><td>区分 Server 重启前后的进程实例</td><td>Server 启动时生成 epoch；Worker 心跳和结果携带该值，旧实例的数据会被识别。</td></tr>
-                  <tr><td><code>idempotency_key</code></td><td>处理 Worker 对同一结果的重复回报</td><td>同一 key 和同一回报返回已保存的处理结果；同一 key 对应不同内容时返回冲突。</td></tr>
-                  <tr><td><code>outbox</code></td><td>保证已提交终态的完成事件可以在重启后继续发布</td><td>终态事务同时插入未投递事件；恢复流程读取未投递记录，发布后再标记 delivered。</td></tr>
-                </tbody>
-              </table>
+              <div class="step"><span>1</span><div><h3>接收 Episode</h3><p>Adapter Core 将转换后的 Episode 请求交给 Server 模块。</p></div></div>
+              <div class="step"><span>2</span><div><h3>检查并排队</h3><p>Server 检查任务是否重复，并等待全局并发名额。等待超时或收到取消信号时，任务直接结束。</p></div></div>
+              <div class="step"><span>3</span><div><h3>选择 Worker</h3><p>Server 筛选支持该环境、资源足够、状态正常且仍有空闲容量的 Worker。</p></div></div>
+              <div class="step"><span>4</span><div><h3>执行环境</h3><p>Server 下发任务。Worker 准备环境实例，调用模型，执行环境步骤，并生成奖励与轨迹。</p></div></div>
+              <div class="step"><span>5</span><div><h3>返回结果</h3><p>Worker 单独回报最终结果。Server 完成校验和记录后，将结果返回 Adapter Core。</p></div></div>
             </div>
 
             <div class="callout note">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>请求去重和结果去重不是一回事</strong><span>提交 Episode 时，Server 使用 <code>episode_id + request_checksum</code> 判断“是不是同一个任务”。Worker 回报结果时，Server 使用 <code>ReportResult.idempotency_key</code> 判断“是不是同一次结果重传”。</span></div>
+              <div><strong>示例</strong><span>VeRL 提交一条 GSM8K 数学样本。Bridge 将样本转换为 Episode，并发送给 Adapter Core。Server 控制并发，选择可用 Worker 并下发任务。Worker 调用当前策略模型生成答案，数学环境计算奖励并记录轨迹。Worker 将结果回报 Server，Server 校验并记录后再返回 VeRL，用于后续训练。</span></div>
             </div>
 
             <h3>Server 怎样选择 Worker</h3>
-            <p>当前调度策略是 <code>round_robin</code>，也就是在合格的 Worker 之间轮流选择。它不是在所有 Worker 中盲目轮询，而是先做过滤：</p>
+            <p>Server 先过滤不合格的 Worker，再在合格 Worker 之间轮流选择。</p>
             <div class="module-list">
-              <div><code>环境能力</code><span>Worker 必须声明支持请求中的 <code>env_type</code>，例如 qa、code 或 swe。</span></div>
-              <div><code>资源与环境包</code><span>CPU、内存、GPU 等资源要满足请求；指定 EnvPackage 时，Worker 必须已经同步对应版本。</span></div>
-              <div><code>容量</code><span>Worker 当前有效负载必须小于容量。有效负载取 <code>max(reserved_load, reported_load)</code>。</span></div>
-              <div><code>健康状态</code><span>正在 draining、心跳超时或长时间有负载却没有完成任务的 Worker 不接收新任务。</span></div>
+              <div><code>环境支持</code><span>Worker 必须支持请求指定的环境类型。</span></div>
+              <div><code>资源满足</code><span>CPU、内存、GPU 和环境包等条件必须满足请求。</span></div>
+              <div><code>仍有容量</code><span>Worker 当前执行中的任务数不能达到容量上限。</span></div>
+              <div><code>状态正常</code><span>停止接收新任务、心跳超时或状态异常的 Worker 不会被选择。</span></div>
             </div>
 
-            <h3>为什么还有 Agent 路径</h3>
-            <p>普通任务由 Worker 直接运行环境。需要反复查看文件、修改代码和运行测试的代码任务由 Agent 执行，Server 会把这类任务放入 Agent Pool。三条路径使用的资源如下：</p>
+            <h3>异常、超时和重试</h3>
+            <div class="detail-grid">
+              <div class="detail-card"><strong>取消或超时</strong><p>任务停止继续执行，迟到的结果不会覆盖已经确定的终态。</p></div>
+              <div class="detail-card"><strong>临时通信问题</strong><p>连接中断、模型服务暂时不可用或暂时没有容量时，可以按配置重试。</p></div>
+              <div class="detail-card"><strong>环境执行失败</strong><p>确定性的环境失败通常直接返回，不会自动换一个 Worker 再执行一次。</p></div>
+            </div>
+
+            <h3>高级 Agent 路径</h3>
+            <p>普通任务使用 Native Worker。只有请求明确选择 Agent 模式时，Server 才会使用下面的高级路径。</p>
             <div class="config-table-wrap protocol-table-wrap">
               <table class="config-table">
-                <thead><tr><th>路径</th><th>什么时候使用</th><th>与普通 Worker 路径的区别</th></tr></thead>
+                <thead><tr><th>路径</th><th>适用任务</th><th>主要执行资源</th></tr></thead>
                 <tbody>
-                  <tr><td>Native Worker</td><td>默认路径</td><td>Server 直接选择 Worker 并调用 <code>DispatchEpisode</code></td></tr>
-                  <tr><td>SWE Agent</td><td><code>env_type=swe</code> 且请求指定 <code>execution_mode=agent</code></td><td>同时需要 Agent 名额和一个 Worker Runtime Gateway session</td></tr>
-                  <tr><td>Code Agent</td><td><code>env_type=code</code> 且请求指定 <code>execution_mode=agent</code></td><td>只使用 ToolEnv Agent；不选择 Worker，也不创建 Gateway session</td></tr>
+                  <tr><td>Native Worker</td><td>普通问答、环境交互和评测任务</td><td>Worker 与环境插件</td></tr>
+                  <tr><td>SWE Agent</td><td>需要代码仓库和隔离运行环境的软件工程任务</td><td>Agent 与 Worker Runtime Gateway</td></tr>
+                  <tr><td>Code Agent</td><td>使用工具完成多步代码操作的任务</td><td>ToolEnv Agent</td></tr>
                 </tbody>
               </table>
             </div>
 
-            <h3>结果回报、超时和重试</h3>
-            <p>Worker 的 <code>DispatchEpisode</code> 调用可以返回执行进度，但最终结果必须通过 <code>ControlPlaneService.ReportResult</code> 独立回报。Server 会检查 Worker ID、lease、token 和 epoch；这样即使网络重复发送、任务已经取消，或旧 Worker 很晚才返回，也不会覆盖正确结果。</p>
-            <p>重试也不是“失败就再跑一遍”。连接中断、模型服务临时失败或暂时没有容量可以重试；确定性的环境执行失败不会换一个 Worker 重跑，因为重复执行可能再次消耗模型调用，并产生外部副作用。</p>
+            <h3>状态是否会保存</h3>
+            <p>持久化是可配置能力。启用后，Server 会保存 Episode、任务分发和最终状态，并在 Adapter Core 进程重启后恢复可恢复的信息。关闭持久化时，这些运行状态只保存在内存中，进程退出后不会保留。</p>
 
-            <h3>哪些状态能在重启后恢复</h3>
-            <div class="config-table-wrap protocol-table-wrap">
-              <table class="config-table">
-                <thead><tr><th>状态位置</th><th>保存内容</th><th>重启后的行为</th></tr></thead>
-                <tbody>
-                  <tr><td>Server 状态 SQLite</td><td>Episode 请求和终态、dispatch、结果幂等记录、AgentJob、Gateway session、outbox</td><td>Server 启动时读取并恢复等待、超时、清理和事件补发</td></tr>
-                  <tr><td>Trajectory Store</td><td>轨迹文件以及供查询使用的 EpisodeResult 索引</td><td>它是独立的可选存储，不与 Server 状态库共享事务</td></tr>
-                  <tr><td>内存运行态</td><td>Worker / Agent 注册和心跳、等待通道、取消句柄、短期缓存</td><td>进程退出后消失；Worker 和 Agent 必须重新注册、继续发送心跳</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>“持久化”不代表所有数据一起提交</strong><span>终态 <code>EpisodeResult</code> 与 outbox 事件在同一个 Server 状态库事务中提交。Trajectory Store 随后独立写入；轨迹索引写入失败不会回滚已经提交的 Server 终态。</span></div>
-            </div>
-
-            <h3>运行时会打开哪些接口</h3>
-            <div class="config-table-wrap protocol-table-wrap">
-              <table class="config-table">
-                <thead><tr><th>接口</th><th>默认地址或开关</th><th>用途</th></tr></thead>
-                <tbody>
-                  <tr><td>主 gRPC</td><td><code>UENV_ADDR</code>，默认 <code>[::]:50051</code></td><td>同一端口承载 Adapter、Worker 控制面、Agent 控制面和 Admin gRPC</td></tr>
-                  <tr><td>Admin HTTP</td><td><code>127.0.0.1:50052</code></td><td>状态、健康和管理查询；端口设为 0 可禁用</td></tr>
-                  <tr><td>Trajectory HTTP</td><td><code>UENV_TRAJECTORY_ENABLED</code>，默认监听 <code>:8077</code></td><td>轨迹上传、聚合和结果查询</td></tr>
-                  <tr><td>Obs HTTP / SSE</td><td><code>UENV_OBS_ENABLED</code>，默认监听 <code>:50053</code></td><td>运行事件聚合和前端实时订阅</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <h3>想继续看代码时，从这里开始</h3>
-            <p>调试或二次开发时，下面的文件顺序对应任务从提交到完成的调用路径。</p>
-            <div class="module-list">
-              <div><code>uenv-bridge/core/src/main.rs</code><span>先看进程如何加载配置、创建 ServerState，并注册所有网络服务。</span></div>
-              <div><code>service/episode.rs</code><span>再看 Episode 公共入口和 Native、SWE Agent、Code Agent 三条执行路径。</span></div>
-              <div><code>scheduler/ · admission.rs</code><span>理解请求怎样取得并发名额，以及 Worker 如何被过滤和选中。</span></div>
-              <div><code>control_plane.rs</code><span>理解 Worker 注册、心跳和最终结果回报。</span></div>
-              <div><code>persistence/ · result_finalizer.rs</code><span>最后看终态事务、outbox、重启恢复和结果字段补齐。</span></div>
-            </div>
-
-            <div class="boundary-note"><strong>再确认一次职责边界</strong><span>Server 只做协调和记录。真正执行 <code>reset / step / close</code> 的是 Worker 中的环境插件；环境版本和制品由 Hub 管理；Worker / Agent 自己负责本地运行时资源和未确认结果的 WAL。</span></div>
           </section>
 
           <section class="doc-section component-detail" id="uenv-worker" data-title="uenv-worker">
             <div class="component-heading"><span class="component-tag rust">RS</span><div><h2>uenv-worker</h2><p>环境执行与实例运行时</p></div></div>
-            <p class="lead">连接 Server 控制面，接收带租约的 Episode，在本机管理环境实例、插件进程、模型调用、预热池与执行结果回报。</p>
+            <p class="lead">uenv-worker 连接 Server，接收已分配的 Episode，在本机准备环境实例、调用模型、执行环境步骤，并回报结果。</p>
 
             <h3>主要职责</h3>
             <div class="detail-grid">
-              <div class="detail-card"><strong>接入控制面</strong><p>注册真实容量与环境能力，持续发送心跳，并在 Server epoch 变化后重新注册。</p></div>
-              <div class="detail-card"><strong>执行 Episode</strong><p>校验租约和并发容量，驱动插件 reset → step → close，输出进度与最终轨迹。</p></div>
-              <div class="detail-card"><strong>运行时可靠性</strong><p>通过预热池减少冷启动，通过 WAL 保存未确认结果并在重连后重放。</p></div>
+              <div class="detail-card"><strong>报告能力</strong><p>向 Server 注册支持的环境、资源、容量和网络地址，并持续发送心跳。</p></div>
+              <div class="detail-card"><strong>管理环境实例</strong><p>创建、预热、复用和回收环境实例，减少重复启动带来的等待。</p></div>
+              <div class="detail-card"><strong>执行并回报</strong><p>调用模型和环境插件，生成响应、奖励与轨迹，并把最终结果回报 Server。</p></div>
             </div>
 
-            <h3>执行路径</h3>
+            <h3>一次任务如何执行</h3>
             <div class="steps compact-steps">
-              <div class="step"><span>1</span><div><h3>启动并注册</h3><p>加载 YAML，发现资源与环境能力，启动 Worker gRPC、指标、健康检查及心跳循环。</p></div></div>
-              <div class="step"><span>2</span><div><h3>接收 Dispatch</h3><p>验证 lease、token、过期时间与并发信号量，拒绝冲突或过期任务。</p></div></div>
-              <div class="step"><span>3</span><div><h3>准备环境</h3><p>从预热池获取实例；需要时通过 Hub resolver 同步 EnvPackage 并注册 manifest。</p></div></div>
-              <div class="step"><span>4</span><div><h3>执行并回报</h3><p>执行普通插件或 SWE 专用路径，先写 WAL，再调用 ReportResult，确认后清理记录。</p></div></div>
+              <div class="step"><span>1</span><div><h3>启动并注册</h3><p>Worker 加载配置，启动服务，并向 Server 报告自己的能力和容量。</p></div></div>
+              <div class="step"><span>2</span><div><h3>接收任务</h3><p>Worker 检查任务是否有效，并确认本机仍有可用容量。</p></div></div>
+              <div class="step"><span>3</span><div><h3>准备环境</h3><p>优先使用已预热的环境实例；需要新的环境包时，按需从 Hub 获取信息和制品。</p></div></div>
+              <div class="step"><span>4</span><div><h3>执行并回报</h3><p>Worker 完成模型生成和环境交互，再把最终结果回报 Server。</p></div></div>
             </div>
 
-            <h3>关键实现</h3>
-            <div class="module-list">
-              <div><code>runtime.rs</code><span>组装控制面、gRPC 服务、插件、预热池、Hub 与 Runtime Gateway</span></div>
-              <div><code>grpc_server/worker_service.rs</code><span>DispatchEpisode、取消、租约校验与流式进度</span></div>
-              <div><code>episode/executor.rs</code><span>单轮与多步 Episode、模型调用、奖励和轨迹</span></div>
-              <div><code>plugin/host.rs</code><span>插件 manifest、进程、UDS、健康检查与实例生命周期</span></div>
-              <div><code>pool/warmup_pool.rs</code><span>预热、租用、回收、冷却与空闲淘汰</span></div>
-              <div><code>wal/ · hub/ · swe/</code><span>结果重放、环境包解析与 SWE 容器化执行</span></div>
-            </div>
-
-            <div class="boundary-note"><strong>职责边界</strong><span>Worker 执行已分配任务，但不决定全局调度，也不拥有环境版本的权威元数据。</span></div>
+            <div class="boundary-note"><strong>职责边界</strong><span>Worker 执行 Server 已分配的任务，但不决定全局调度，也不负责维护环境版本的权威信息。</span></div>
           </section>
 
           <section class="doc-section component-detail" id="uenv-hub" data-title="uenv-hub">
-            <div class="component-heading"><span class="component-tag rust">RS</span><div><h2>uenv-hub</h2><p>环境元数据与制品注册中心</p></div></div>
-            <p class="lead">为环境、版本、接口 Schema、EnvPackage、Agent Bridge 与 Episode Stack 提供可查询、可解析、可审计的 HTTP 注册服务。</p>
+            <div class="component-heading"><span class="component-tag rust">RS</span><div><h2>uenv-hub</h2><p>环境元数据与制品管理</p></div></div>
+            <p class="lead">uenv-hub 保存环境、版本、Manifest 和环境包信息，为 Worker 提供查询与下载接口。</p>
 
             <h3>主要职责</h3>
             <div class="detail-grid">
-              <div class="detail-card"><strong>版本与 Manifest</strong><p>创建环境、发布版本、解析约束、获取接口与示例，并支持 yank 和增量同步。</p></div>
-              <div class="detail-card"><strong>包与组合交付</strong><p>管理内容寻址的 EnvPackage 制品、Agent Bridge 目录和 Episode Stack 解析结果。</p></div>
-              <div class="detail-card"><strong>治理与审计</strong><p>提供 token、角色、命名空间权限、限流、审计日志和发布校验。</p></div>
+              <div class="detail-card"><strong>管理环境版本</strong><p>记录环境名称、版本、接口定义和发布状态。</p></div>
+              <div class="detail-card"><strong>管理环境包</strong><p>保存环境包及其校验信息，供 Worker 按需同步。</p></div>
+              <div class="detail-card"><strong>提供访问控制</strong><p>支持鉴权、权限、限流和审计等管理能力。</p></div>
             </div>
 
-            <h3>Worker 如何使用 Hub</h3>
+            <h3>Worker 什么时候访问 Hub</h3>
             <div class="steps compact-steps">
-              <div class="step"><span>1</span><div><h3>解析引用</h3><p>Worker 根据 env_package_id 和 version 请求版本或 Stack 的解析结果。</p></div></div>
-              <div class="step"><span>2</span><div><h3>获取同步计划</h3><p>Hub 返回 manifest、接口定义、bundle digest 与需要下载的制品信息。</p></div></div>
-              <div class="step"><span>3</span><div><h3>同步到本地</h3><p>Worker 下载并校验制品，把本地 manifest 注册到 PluginHost 后再创建实例。</p></div></div>
+              <div class="step"><span>1</span><div><h3>解析环境引用</h3><p>Worker 根据请求中的环境包和版本信息查询 Hub。</p></div></div>
+              <div class="step"><span>2</span><div><h3>获取 Manifest</h3><p>Hub 返回环境定义、版本和需要同步的制品信息。</p></div></div>
+              <div class="step"><span>3</span><div><h3>同步到本地</h3><p>Worker 下载并校验缺少的制品，然后创建环境实例。</p></div></div>
             </div>
 
-            <h3>关键实现</h3>
-            <div class="module-list">
-              <div><code>uenv-hub-server/routes.rs</code><span>health、env、package、stack、template 与 admin HTTP 路由</span></div>
-              <div><code>uenv-hub-server/service.rs</code><span>创建、发布、yank 与删除的业务编排</span></div>
-              <div><code>uenv-hub-core/repository.rs</code><span>SQLite 查询、版本解析、制品与审计持久化</span></div>
-              <div><code>uenv-hub-core/domain/manifest.rs</code><span>环境名、镜像引用、接口 Schema 与发布规则校验</span></div>
-              <div><code>uenv-hub-client/client.rs</code><span>Worker 和 CLI 使用的类型化 HTTP 客户端</span></div>
+            <div class="callout note">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
+              <div><strong>Hub 不是每次 Episode 的必经步骤</strong><span>如果 Worker 已经具备所需环境和版本，就可以直接执行任务；只有需要解析或同步环境包时才访问 Hub。</span></div>
             </div>
 
-            <div class="boundary-note"><strong>职责边界</strong><span>Hub 提供权威元数据和制品，不参与运行时 Worker 选择、Episode 调度或轨迹收口。</span></div>
+            <div class="boundary-note"><strong>职责边界</strong><span>Hub 管理环境元数据和制品，不参与 Worker 选择、Episode 调度和训练结果返回。</span></div>
           </section>
 
           <nav class="page-pagination" id="pagePagination" aria-label="使用文档分页"></nav>
