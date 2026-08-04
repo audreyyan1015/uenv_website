@@ -2,8 +2,9 @@
   const PAGE_DEFS = [
     { slug: "overview", id: "overview", title: "概览" },
     { slug: "quick-start", id: "quick-start", title: "快速开始" },
-    { slug: "workflow", id: "workflow", title: "使用流程" },
-    { slug: "configuration", id: "configuration", title: "配置说明" },
+    { slug: "verl-integration", id: "verl-integration", title: "接入 VeRL" },
+    { slug: "configuration", id: "configuration", title: "部署与配置" },
+    { slug: "environment-management", id: "environment-management", title: "发布与同步环境" },
     { slug: "architecture", id: "architecture", title: "架构总览" },
     { slug: "data-flow", id: "data-flow", title: "Episode 数据流" },
     { slug: "uenv-bridge", id: "uenv-bridge", title: "uenv-bridge" },
@@ -17,10 +18,9 @@
     ["components", "uenv-bridge"],
     ["protocol", "architecture"],
     ["roadmap", "overview"],
+    ["workflow", "verl-integration"],
   ]);
 
-  const root = document.documentElement;
-  const themeButton = document.getElementById("themeButton");
   const menuButton = document.getElementById("menuButton");
   const sidebar = document.getElementById("sidebar");
   const sidebarBackdrop = document.getElementById("sidebarBackdrop");
@@ -99,27 +99,6 @@
 
   renderPagination();
   renderToc();
-
-  let storedTheme = null;
-  try {
-    storedTheme = localStorage.getItem("uenv-theme");
-  } catch {
-    storedTheme = null;
-  }
-  if (storedTheme === "light" || storedTheme === "dark") {
-    root.dataset.theme = storedTheme;
-  } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
-    root.dataset.theme = "light";
-  }
-
-  themeButton.addEventListener("click", () => {
-    root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
-    try {
-      localStorage.setItem("uenv-theme", root.dataset.theme);
-    } catch {
-      // Storage may be unavailable in local file previews.
-    }
-  });
 
   function closeSidebar() {
     sidebar.classList.remove("open");

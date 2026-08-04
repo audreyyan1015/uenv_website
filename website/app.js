@@ -1,32 +1,8 @@
-const root = document.documentElement;
 const header = document.querySelector('.site-header');
-const themeToggle = document.getElementById('themeToggle');
 const menuButton = document.getElementById('menuButton');
 const mobileMenu = document.getElementById('mobileMenu');
 const copyButton = document.getElementById('copyButton');
 const quickstartCode = document.getElementById('quickstartCode');
-
-let savedTheme = null;
-try {
-  savedTheme = localStorage.getItem('uenv-theme');
-} catch {
-  savedTheme = null;
-}
-if (savedTheme === 'light' || savedTheme === 'dark') {
-  root.dataset.theme = savedTheme;
-} else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-  root.dataset.theme = 'light';
-}
-
-themeToggle?.addEventListener('click', () => {
-  const nextTheme = root.dataset.theme === 'light' ? 'dark' : 'light';
-  root.dataset.theme = nextTheme;
-  try {
-    localStorage.setItem('uenv-theme', nextTheme);
-  } catch {
-    // Storage may be unavailable in local file previews.
-  }
-});
 
 function closeMenu() {
   menuButton?.classList.remove('is-open');
