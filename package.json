@@ -1,0 +1,21 @@
+{
+  "name": "uenv-website",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Static UEnv website and Markdown documentation build",
+  "scripts": {
+    "build": "node scripts/build-docs.mjs",
+    "build:docs": "node scripts/build-docs.mjs",
+    "check": "node scripts/build-docs.mjs --check",
+    "check:docs": "node scripts/build-docs.mjs --check"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "github-slugger": "^2.0.0",
+    "highlight.js": "^11.11.1",
+    "markdown-it": "^14.1.0"
+  }
+}
