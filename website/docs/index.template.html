@@ -366,7 +366,7 @@
             <div class="steps compact-steps">
               <div class="step"><span>1</span><div><h3>启动并注册</h3><p>Worker 加载配置，启动服务，并向 Server 报告自己的能力和容量。</p></div></div>
               <div class="step"><span>2</span><div><h3>接收任务</h3><p>Worker 检查任务是否有效，并确认本机仍有可用容量。</p></div></div>
-              <div class="step"><span>3</span><div><h3>准备环境</h3><p>优先使用已预热的环境实例；需要新的环境包时，按需从 Hub 获取信息和制品。</p></div></div>
+              <div class="step"><span>3</span><div><h3>准备环境</h3><p>优先使用本机已预热或已同步的环境实例；缺少本地可用实例时按需创建。Hub 只用于环境元数据解析或读取已预同步 EnvPackage，不是 Episode 执行热路径。</p></div></div>
               <div class="step"><span>4</span><div><h3>执行并回报</h3><p>Worker 完成模型生成和环境交互，再把最终结果回报 Server。</p></div></div>
             </div>
 
@@ -388,7 +388,7 @@
             <div class="steps compact-steps">
               <div class="step"><span>1</span><div><h3>解析环境引用</h3><p>Worker 根据请求中的环境包和版本信息查询 Hub。</p></div></div>
               <div class="step"><span>2</span><div><h3>获取 Manifest</h3><p>Hub 返回环境定义、版本和需要同步的制品信息。</p></div></div>
-              <div class="step"><span>3</span><div><h3>同步到本地</h3><p>Worker 下载并校验缺少的制品，然后创建环境实例。</p></div></div>
+              <div class="step"><span>3</span><div><h3>使用本地包</h3><p>Worker 优先使用本地已同步或已激活的 EnvPackage；完整制品同步通常由 <code>uenv env sync</code> 在任务前完成。</p></div></div>
             </div>
 
             <div class="callout note">
