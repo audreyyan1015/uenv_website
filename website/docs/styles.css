@@ -113,7 +113,16 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round
   height: 27px;
   flex: 0 0 auto;
 }
-.brand-mark svg { width: 100%; height: 100%; display: block; }
+.brand-mark span {
+  position: absolute;
+  width: 7px;
+  border: 2px solid var(--brand);
+  border-radius: 4px;
+  background: var(--brand-soft);
+}
+.brand-mark span:nth-child(1) { height: 19px; left: 1px; top: 4px; transform: skewY(-25deg); }
+.brand-mark span:nth-child(2) { height: 13px; left: 10px; top: 7px; transform: skewY(25deg); }
+.brand-mark span:nth-child(3) { height: 19px; left: 19px; top: 4px; transform: skewY(-25deg); }
 .brand-name { font-size: 18px; font-weight: 800; letter-spacing: -.03em; }
 .brand-divider { width: 1px; height: 18px; background: var(--border-strong); }
 .brand-subtitle { color: var(--muted); font-size: 13px; font-weight: 650; }
