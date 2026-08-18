@@ -5,8 +5,20 @@ on:
     branches: [main]
     paths:
       - "website/**"
+      - "scripts/**"
+      - "docs.config.mjs"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/deploy-pages.yml"
+  repository_dispatch:
+    types: [deployment-docs-updated, docs-updated]
   workflow_dispatch:
+    inputs:
+      docs_ref:
+        description: "uenv_pre_release branch, tag, or commit SHA"
+        required: false
+        default: "main"
+        type: string
 
 permissions:
   contents: read
@@ -24,14 +36,57 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout website
         uses: actions/checkout@v4
+        with:
+          path: uenv_website
+
+      - name: Resolve documentation revision
+        id: docs-revision
+        shell: bash
+        env:
+          DISPATCH_SHA: ${{ github.event.client_payload.source_sha || github.event.client_payload.sha || '' }}
+          DISPATCH_REF: ${{ github.event.client_payload.source_ref || github.event.client_payload.ref || '' }}
+          MANUAL_REF: ${{ inputs.docs_ref || '' }}
+        run: |
+          docs_ref="${DISPATCH_SHA:-${DISPATCH_REF:-${MANUAL_REF:-main}}}"
+          echo "ref=${docs_ref}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout documentation source
+        uses: actions/checkout@v4
+        with:
+          repository: audreyyan1015/uenv_pre_release
+          ref: ${{ steps.docs-revision.outputs.ref }}
+          path: uenv_pre_release
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: uenv_website/package-lock.json
+
+      - name: Install build dependencies
+        run: npm ci
+        working-directory: uenv_website
+
+      - name: Validate documentation
+        run: npm run check
+        working-directory: uenv_website
+
+      - name: Build static site
+        run: npm run build
+        working-directory: uenv_website
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
+
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./website
+          path: uenv_website/dist
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

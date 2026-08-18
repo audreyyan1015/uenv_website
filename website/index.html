@@ -1,381 +1,175 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="UEnv 是面向 LLM 后训练的分布式环境执行框架，通过 Bridge、Server、Worker 与 Hub 连接训练流程、环境执行和环境元数据管理。"
+      content="UEnv 是面向强化学习训练与评测的分布式环境执行层，通过 UEnv Bridge、UEnv Server 和 UEnv Worker 连接框架与环境。"
     />
-    <meta name="theme-color" content="#f5f8fc" />
-    <meta property="og:title" content="UEnv — Distributed Environment Runtime" />
-    <meta
-      property="og:description"
-      content="A distributed environment runtime for LLM post-training."
-    />
-    <meta property="og:type" content="website" />
-    <title>UEnv — Distributed Environment Runtime</title>
-    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css" />
+    <meta name="theme-color" content="#f7f9fc" />
+    <title>UEnv — 分布式环境执行层</title>
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <a class="skip-link" href="#main">跳转到正文</a>
-    <div class="page-noise" aria-hidden="true"></div>
-    <header class="site-header" id="top">
+
+    <header class="site-header">
       <a class="brand" href="#top" aria-label="UEnv 首页">
-        <span class="brand-mark" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </span>
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
         <span class="brand-name">UEnv</span>
       </a>
 
       <nav class="desktop-nav" aria-label="主导航">
-        <a href="./docs/">使用文档</a>
-        <a href="#capabilities">核心能力</a>
         <a href="#architecture">系统架构</a>
-        <a href="#console">可视化</a>
-        <a href="./docs/?page=quick-start">快速开始</a>
+        <a href="#path">完整路径</a>
+        <a href="#capabilities">核心能力</a>
+        <a href="./docs/">UEnv 文档</a>
       </nav>
 
       <div class="header-actions">
-        <a class="button button-small button-ghost desktop-github" href="https://github.com/audreyyan1015/uenv" target="_blank" rel="noreferrer">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .8a11.2 11.2 0 0 0-3.54 21.83c.56.1.77-.24.77-.54v-2.17c-3.13.68-3.79-1.33-3.79-1.33-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.72 1.16 1.72 1.16 1 1.72 2.63 1.22 3.27.93.1-.73.39-1.22.71-1.5-2.5-.28-5.13-1.25-5.13-5.54 0-1.22.44-2.22 1.16-3-.12-.28-.5-1.43.11-2.97 0 0 .94-.3 3.08 1.15a10.7 10.7 0 0 1 5.6 0c2.14-1.45 3.08-1.15 3.08-1.15.61 1.54.23 2.69.11 2.97.72.78 1.16 1.78 1.16 3 0 4.3-2.64 5.25-5.15 5.53.4.35.76 1.03.76 2.08v3.09c0 .3.2.65.78.54A11.2 11.2 0 0 0 12 .8Z"></path></svg>
-          GitHub
-        </a>
-        <button class="menu-button" id="menuButton" type="button" aria-label="打开导航" aria-expanded="false">
+        <a class="github-link" href="https://github.com/audreyyan1015/uenv_pre_release" target="_blank" rel="noreferrer">GitHub</a>
+        <button class="menu-button" id="menuButton" type="button" aria-label="打开导航" aria-expanded="false" aria-controls="mobileMenu">
           <span></span><span></span>
         </button>
       </div>
 
-      <div class="mobile-menu" id="mobileMenu">
-        <a href="./docs/">使用文档</a>
-        <a href="#capabilities">核心能力</a>
+      <nav class="mobile-menu" id="mobileMenu" aria-label="移动端导航">
         <a href="#architecture">系统架构</a>
-        <a href="#console">可视化</a>
-        <a href="./docs/?page=quick-start">快速开始</a>
-        <a href="https://github.com/audreyyan1015/uenv" target="_blank" rel="noreferrer">GitHub 仓库 ↗</a>
-      </div>
+        <a href="#path">完整路径</a>
+        <a href="#capabilities">核心能力</a>
+        <a href="./docs/">UEnv 文档</a>
+        <a href="https://github.com/audreyyan1015/uenv_pre_release" target="_blank" rel="noreferrer">GitHub ↗</a>
+      </nav>
     </header>
 
     <main id="main">
-      <section class="hero section-shell">
-        <div class="hero-glow hero-glow-one" aria-hidden="true"></div>
-        <div class="hero-glow hero-glow-two" aria-hidden="true"></div>
-
+      <section class="hero section-shell" id="top">
         <div class="hero-copy reveal">
-          <h1>
-            <span class="hero-line">为 LLM 后训练构建的</span>
-            <span class="hero-line hero-accent">分布式环境执行层</span>
-          </h1>
+          <p class="eyebrow"><span aria-hidden="true"></span>分布式环境执行层</p>
+          <h1>让评测与强化学习训练共享一套可靠的环境执行能力</h1>
           <p class="hero-description">
-            UEnv 将训练框架与环境执行解耦，以统一接口连接训练集群、调度控制面、uenv-worker 与 uenv-hub，让大规模多步交互任务更易扩展、观测与复用。
+            UEnv 把框架侧请求、中心调度与环境执行拆成清晰的服务边界，统一支持评测、强化学习训练和轨迹采集。
           </p>
           <div class="hero-actions">
-            <a class="button button-primary" href="https://github.com/audreyyan1015/uenv" target="_blank" rel="noreferrer">
-              查看 GitHub
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
-            </a>
-            <a class="button button-secondary" href="./docs/">
-              查看使用文档
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
-            </a>
-          </div>
-          <div class="hero-meta" aria-label="项目特性">
-            <span><i></i> Apache-2.0</span>
-            <span><i></i> Rust + Python</span>
-            <span><i></i> gRPC + UDS</span>
+            <a class="button button-primary" href="./docs/">阅读完整文档 <span aria-hidden="true">→</span></a>
+            <a class="button button-secondary" href="https://github.com/audreyyan1015/uenv_pre_release" target="_blank" rel="noreferrer">查看源码 <span aria-hidden="true">↗</span></a>
           </div>
         </div>
 
-        <div class="hero-visual reveal reveal-delay-1" aria-label="UEnv 架构动画示意">
-          <div class="visual-toolbar">
-            <div class="window-dots"><span></span><span></span><span></span></div>
-            <span class="visual-title">uenv / runtime topology</span>
+        <figure class="architecture-card reveal" id="architecture" aria-labelledby="architectureTitle">
+          <figcaption>
+            <span>核心执行链路</span>
+            <strong id="architectureTitle">请求从框架进入，结果从 Worker 返回</strong>
+          </figcaption>
+          <div class="architecture-main" aria-label="UEnv Bridge 到 UEnv Server 再到 UEnv Worker">
+            <article class="architecture-node">
+              <span>01</span>
+              <strong>UEnv Bridge</strong>
+              <p>把强化学习框架的数据转换为统一请求</p>
+            </article>
+            <span class="architecture-arrow" aria-hidden="true">→</span>
+            <article class="architecture-node architecture-node-primary">
+              <span>02</span>
+              <strong>UEnv Server</strong>
+              <p>接收请求，管理 Worker，并调度 Episode</p>
+            </article>
+            <span class="architecture-arrow" aria-hidden="true">→</span>
+            <article class="architecture-node">
+              <span>03</span>
+              <strong>UEnv Worker</strong>
+              <p>运行环境、调用模型并返回结果与轨迹</p>
+            </article>
           </div>
+          <aside class="hub-side-note">
+            <span>可选旁路</span>
+            <strong>UEnv Hub</strong>
+            <p>按需管理和分发环境包，不参与每次 Episode 的中心调度。</p>
+          </aside>
+        </figure>
 
-          <div class="topology">
-            <div class="topology-grid" aria-hidden="true"></div>
-            <div class="topology-connectors" aria-hidden="true">
-              <div class="topology-connector connector-training-bridge"><span></span></div>
-              <div class="topology-connector connector-bridge-server"><span></span></div>
-              <div class="topology-connector connector-server-worker"><span></span></div>
-              <div class="topology-connector connector-worker-hub"><span></span></div>
-            </div>
-
-            <article class="topology-node node-training">
-              <div class="node-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 15l3-3 3 2 5-6"></path></svg>
-              </div>
-              <div><strong>VeRL / ROLL / NexRL</strong></div>
-            </article>
-
-            <article class="topology-node node-bridge is-active">
-              <div class="node-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7zM3 12h4M17 12h4M12 3v4M12 17v4"></path></svg>
-              </div>
-              <div><strong>uenv-bridge</strong></div>
-            </article>
-
-            <article class="topology-node node-server">
-              <div class="node-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="6" rx="1"></rect><rect x="4" y="14" width="16" height="6" rx="1"></rect><path d="M8 7h.01M8 17h.01"></path></svg>
-              </div>
-              <div><strong>uenv-server</strong></div>
-            </article>
-
-            <article class="topology-node node-worker is-active">
-              <div class="node-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
-              </div>
-              <div><strong>uenv-worker</strong></div>
-            </article>
-
-            <article class="topology-node node-hub">
-              <div class="node-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="7" ry="3"></ellipse><path d="M5 5v7c0 1.7 3.1 3 7 3s7-1.3 7-3V5M5 12v7c0 1.7 3.1 3 7 3s7-1.3 7-3v-7"></path></svg>
-              </div>
-              <div><strong>uenv-hub</strong></div>
-            </article>
-
-            <div class="telemetry-card">
-              <div><span>Workers online</span><strong>8 / 8</strong></div>
-              <div><span>Queue status</span><strong class="text-green">healthy</strong></div>
-              <div><span>Transport</span><strong>gRPC</strong></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="framework-strip reveal reveal-delay-2">
-          <div class="framework-list">
-            <span>VeRL</span><span>ROLL</span><span>NeMo-RL</span><span>NexRL</span><span>OpenRLHF</span><span>Custom Stack</span>
-          </div>
-        </div>
+        <nav class="hero-path reveal" id="path" aria-label="UEnv 完整使用路径">
+          <p><span>完整能力路径</span><strong>从第一台机器，到训练结果与轨迹</strong></p>
+          <ol>
+            <li>
+              <a href="./docs/?page=basic-deployment">
+                <span>01</span><strong>单机部署</strong>
+              </a>
+            </li>
+            <li>
+              <a href="./docs/?page=multi-node-deployment">
+                <span>02</span><strong>多机部署</strong>
+              </a>
+            </li>
+            <li>
+              <a href="./docs/?page=evaluation">
+                <span>03</span><strong>评测</strong>
+              </a>
+            </li>
+            <li>
+              <a href="./docs/?page=training">
+                <span>04</span><strong>强化学习训练</strong>
+              </a>
+            </li>
+            <li>
+              <a href="./docs/?page=trajectory">
+                <span>05</span><strong>轨迹</strong>
+              </a>
+            </li>
+          </ol>
+        </nav>
       </section>
 
       <section class="section-shell section-block" id="capabilities">
         <div class="section-heading reveal">
           <div>
-            <h2>一个统一执行层，连接完整后训练链路</h2>
+            <p class="section-kicker">核心能力</p>
+            <h2>让框架、调度与环境各自保持清晰</h2>
           </div>
-          <p>让训练框架专注优化，让环境系统专注可靠执行。UEnv 通过标准协议屏蔽底层运行差异。</p>
+          <p>稳定的公共边界减少重复接入成本，也让单机验证、多机扩展和任务复现使用同一套方法。</p>
         </div>
 
-        <div class="feature-grid">
-          <article class="feature-card feature-card-large reveal">
-            <div class="feature-icon feature-icon-blue">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 4v6M17 4v6M6 14h12M9 11v6M15 11v6M8 20h8"></path></svg>
-            </div>
-            <h3>训练框架无关</h3>
-            <p>通过 Bridge 适配不同训练框架，将 Episode 请求转换为统一协议，避免环境逻辑与训练代码重复耦合。</p>
-            <div class="card-code"><span>bridge</span><code>EpisodeRequest → EpisodeResult</code></div>
+        <div class="capability-grid">
+          <article class="capability-card reveal">
+            <span>统一契约</span>
+            <h3>评测与训练共享任务模型</h3>
+            <p>Bridge 负责框架转换，任务输入、Episode 状态、结果与轨迹采用统一语义。</p>
           </article>
-
-          <article class="feature-card reveal reveal-delay-1">
-            <div class="feature-icon feature-icon-green">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><path d="m15 18 2 2 4-5"></path></svg>
-            </div>
-            <h3>弹性 Worker Pool</h3>
-            <p>通过注册、心跳、调度与结果上报组织执行资源，支持环境实例预热和并行 Episode 执行。</p>
+          <article class="capability-card reveal">
+            <span>弹性执行</span>
+            <h3>Worker 注册后按能力调度</h3>
+            <p>Server 通过注册与心跳掌握容量，把任务交给满足环境和资源条件的 Worker。</p>
           </article>
-
-          <article class="feature-card reveal reveal-delay-2">
-            <div class="feature-icon feature-icon-purple">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3a2.5 2.5 0 0 1 0 5H7v3h3v-1.5a2.5 2.5 0 1 1 5 0V11h2V8h-1.5a2.5 2.5 0 1 1 0-5H20v17h-5v-1.5a2.5 2.5 0 1 0-5 0V20H4V3Z"></path></svg>
-            </div>
-            <h3>插件化环境运行时</h3>
-            <p>环境以独立插件进程运行，通过本地协议完成 reset、step、close 与健康检查。</p>
-          </article>
-
-          <article class="feature-card reveal">
-            <div class="feature-icon feature-icon-orange">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h3l2-7 4 14 3-9 2 2h4"></path></svg>
-            </div>
-            <h3>全链路可观测</h3>
-            <p>围绕 run、worker、environment、episode 和 step 组织状态，让异常定位与运行分析更直接。</p>
-          </article>
-
-          <article class="feature-card feature-card-wide reveal reveal-delay-1">
-            <div class="feature-icon feature-icon-cyan">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path><path d="M5 5v14"></path></svg>
-            </div>
-            <div>
-              <h3>面向大规模多步交互</h3>
-              <p>控制面与执行面分离，推理服务由 Worker 直接访问，减少中心节点数据转发压力。</p>
-            </div>
-            <div class="mini-flow" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          <article class="capability-card reveal">
+            <span>可复现</span>
+            <h3>环境、结果和轨迹可以追溯</h3>
+            <p>按需结合 Hub 管理环境包，让任务配置、运行结果与执行过程形成可核验链路。</p>
           </article>
         </div>
       </section>
 
-      <section class="architecture-section" id="architecture">
-        <div class="section-shell section-block">
-          <div class="section-heading reveal">
-            <div>
-                <h2>从训练请求到环境结果，路径清晰可控</h2>
-            </div>
-            <div class="section-heading-detail">
-              <p>uenv-bridge、uenv-server、uenv-worker 与 uenv-hub 连接训练请求、分布式执行和环境元数据管理。</p>
-              <a class="text-link" href="./docs/?page=architecture">查看系统架构 <span>↗</span></a>
-            </div>
-          </div>
-
-          <div class="architecture-board reveal">
-            <div class="architecture-flow">
-              <article class="architecture-node">
-                <div class="architecture-logo">T</div>
-                <h3>Training Framework</h3>
-                <p>ROLL · VeRL · NeMo-RL · NexRL</p>
-                <ul><li>生成 rollout 请求</li><li>消费环境执行结果</li></ul>
-              </article>
-              <div class="architecture-link link-blue"><span>Python API</span><i></i></div>
-              <article class="architecture-node is-highlighted">
-                <div class="architecture-logo">B</div>
-                <h3>uenv-bridge</h3>
-                <p>训练框架适配器</p>
-                <ul><li>请求 / 结果转换</li><li>嵌入训练进程</li></ul>
-              </article>
-              <div class="architecture-link link-blue"><span>L1 gRPC</span><i></i></div>
-              <article class="architecture-node">
-                <div class="architecture-logo">S</div>
-                <h3>uenv-server</h3>
-                <p>全栈调度控制面</p>
-                <ul><li>任务调度与分发</li><li>状态聚合与管理</li></ul>
-              </article>
-              <div class="architecture-link link-blue"><span>Dispatch</span><i></i></div>
-              <article class="architecture-node is-highlighted">
-                <div class="architecture-logo">W</div>
-                <h3>uenv-worker</h3>
-                <p>Worker Pool 执行层</p>
-                <ul><li>实例池与任务执行</li><li>推理服务直连</li></ul>
-              </article>
-              <div class="architecture-link link-green"><span>HTTP metadata</span><i></i></div>
-              <article class="architecture-node">
-                <div class="architecture-logo">H</div>
-                <h3>uenv-hub</h3>
-                <p>环境元数据注册中心</p>
-                <ul><li>版本与 manifest 管理</li><li>HTTP API + SQLite</li></ul>
-              </article>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section-shell section-block" id="console">
-        <div class="section-heading reveal">
+      <section class="docs-cta">
+        <div class="section-shell docs-cta-inner reveal">
           <div>
-            <h2>把分布式运行状态变成一张可读的图</h2>
+            <p class="section-kicker">UEnv 文档</p>
+            <h2>按完整路径开始部署和运行任务</h2>
+            <p>文档覆盖单机、多机、评测、强化学习训练、轨迹、框架接入与日常运维。</p>
           </div>
-          <p>展示工作流阶段、Worker 层级、Episode 进度、事件与日志，快速定位卡点和失败分支。</p>
-        </div>
-
-        <div class="console-shell reveal">
-          <div class="console-topbar">
-            <div class="console-brand"><span class="brand-mark mini"><span></span><span></span><span></span></span> UEnv Console</div>
-            <div class="console-run"><i></i> run-7c2a91 · RUNNING</div>
-            <div class="console-controls"><span>Live</span><span class="console-stop">Stop run</span></div>
-          </div>
-          <div class="console-body">
-            <div class="console-workflow">
-              <div class="pane-title"><span>WORKFLOW</span><small>7 stages</small></div>
-              <div class="workflow-canvas">
-                <div class="workflow-line"></div>
-                <div class="workflow-step done"><i>✓</i><div><strong>Sample ingestion</strong><span>VeRL → UEnv</span></div><em>1,280</em></div>
-                <div class="workflow-step done"><i>✓</i><div><strong>Task dispatch</strong><span>uenv-server</span></div><em>1,274</em></div>
-                <div class="workflow-step active"><i></i><div><strong>Worker pool</strong><span>8 workers · 2 retries</span></div><em>312</em></div>
-                <div class="workflow-step active"><i></i><div><strong>Environment rollout</strong><span>multi-step execution</span></div><em>287</em></div>
-                <div class="workflow-step pending"><i></i><div><strong>Reward aggregation</strong><span>waiting upstream</span></div><em>0</em></div>
-              </div>
-            </div>
-            <aside class="console-tree">
-              <div class="pane-title"><span>OBJECT TREE</span><small>live state</small></div>
-              <div class="tree-row depth-0 selected"><b>⌄</b><i class="tree-dot blue"></i><span>run · 7c2a91</span><em>active</em></div>
-              <div class="tree-row depth-1"><b>⌄</b><i class="tree-dot green"></i><span>worker-01</span><em>4 envs</em></div>
-              <div class="tree-row depth-2"><b>⌄</b><i class="tree-dot blue"></i><span>math-plugin #1</span><em>12 ep</em></div>
-              <div class="tree-row depth-3"><b></b><i class="tree-dot blue"></i><span>episode 9a3f</span><em>14 / 20</em></div>
-              <div class="tree-row depth-3"><b></b><i class="tree-dot green"></i><span>episode 9b01</span><em>done</em></div>
-              <div class="tree-row depth-1"><b>⌄</b><i class="tree-dot orange"></i><span>worker-04</span><em>retrying</em></div>
-              <div class="tree-row depth-2"><b></b><i class="tree-dot red"></i><span>episode 81f2</span><em>failed</em></div>
-              <div class="detail-card"><strong>episode 81f2</strong><p>Timeout at step 14 · retry 2/3</p><div><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
-            </aside>
-          </div>
-          <div class="console-bottom">
-            <div class="console-tabs"><span class="active">Logs</span><span>Metrics</span><span>Events</span><span>Snapshots</span></div>
-            <div class="log-line error"><time>13:42:11.812</time><b>ERROR</b><span>worker-04</span><p>episode 81f2 exceeded maximum retry count</p></div>
-            <div class="log-line"><time>13:42:10.044</time><b>INFO</b><span>worker-01</span><p>step 20 completed · latency=412ms</p></div>
-            <div class="log-line warn"><time>13:42:09.337</time><b>WARN</b><span>worker-07</span><p>heartbeat delayed by 4.2s · marked degraded</p></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="quickstart-section" id="start">
-        <div class="section-shell section-block quickstart-grid">
-          <div class="quickstart-copy reveal">
-            <h2>启动 UEnv 核心服务</h2>
-            <p>从仓库根目录构建 Adapter Core 与 Worker，再启动独立的 uenv-hub，并让 Worker 连接当前控制面与环境注册中心。</p>
-            <div class="quickstart-points">
-              <span><i>01</i> 构建核心组件</span>
-              <span><i>02</i> 启动 Adapter Core</span>
-              <span><i>03</i> 启动 uenv-hub</span>
-              <span><i>04</i> 接入 uenv-worker</span>
-            </div>
-            <a class="text-link" href="./docs/?page=quick-start">查看完整快速开始 <span>↗</span></a>
-          </div>
-
-          <div class="terminal reveal reveal-delay-1">
-            <div class="terminal-bar">
-              <div class="window-dots"><span></span><span></span><span></span></div>
-              <span>bash — uenv</span>
-              <button class="copy-button" id="copyButton" type="button" aria-label="复制快速开始命令">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                <span>复制</span>
-              </button>
-            </div>
-            <pre id="quickstartCode"><code><span class="comment"># Build core components from repository root</span>
-<span class="prompt">$</span> cargo build -p uenv-server -p uenv-worker -p uenv-adapter-core
-<span class="prompt">$</span> (cd uenv-hub &amp;&amp; cargo build)
-
-<span class="comment"># Terminal 1 — Adapter Core + control plane</span>
-<span class="prompt">$</span> UENV_ADDR=0.0.0.0:50051 \
-  UENV_CONFIG_PATH=config/server.yaml \
-  cargo run -p uenv-adapter-core
-
-<span class="comment"># Terminal 2 — environment registry</span>
-<span class="prompt">$</span> (cd uenv-hub &amp;&amp; UENV_HUB_AUTH__REQUIRE_TOKEN=false cargo run -p uenv-hub-server)
-
-<span class="comment"># Terminal 3 — execution node, from repository root</span>
-<span class="prompt">$</span> UENV_SERVER_ENDPOINT=127.0.0.1:50051 \
-  UENV_HUB_ENDPOINT=http://127.0.0.1:8080 \
-  cargo run -p uenv-worker -- --config config/uenv-worker.yaml serve</code></pre>
-            <div class="terminal-status"><i></i><span>adapter core · hub · worker connected</span><em>ready</em></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="cta-section section-shell reveal">
-        <div class="cta-grid" aria-hidden="true"></div>
-        <div class="cta-copy">
-          <h2>让后训练系统更模块化、更可扩展。</h2>
-          <p>从使用文档开始接入，或前往 GitHub 查看源码与当前实现进展。</p>
-        </div>
-        <div class="cta-actions">
-          <a class="button button-light" href="./docs/">
-            查看使用文档
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
-          </a>
-          <a class="button button-cta-ghost" href="https://github.com/audreyyan1015/uenv" target="_blank" rel="noreferrer">
-            查看 GitHub
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
-          </a>
+          <a class="button button-light" href="./docs/">打开 UEnv 文档 <span aria-hidden="true">→</span></a>
         </div>
       </section>
     </main>
 
     <footer class="site-footer section-shell">
-      <a class="brand" href="#top"><span class="brand-mark"><span></span><span></span><span></span></span><span class="brand-name">UEnv</span></a>
-      <p class="pku-signature"><strong>北京大学</strong><span>Peking University</span></p>
-      <div><span>Apache-2.0</span><a href="./docs/">使用文档</a><a href="https://github.com/audreyyan1015/uenv" target="_blank" rel="noreferrer">GitHub ↗</a><a href="#top">返回顶部 ↑</a></div>
+      <a class="brand" href="#top" aria-label="返回页面顶部">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="brand-name">UEnv</span>
+      </a>
+      <p>面向强化学习任务的分布式环境执行层</p>
+      <a href="https://github.com/audreyyan1015/uenv_pre_release" target="_blank" rel="noreferrer">Apache-2.0 · GitHub ↗</a>
     </footer>
 
-    <script src="app.js"></script>
+    <script src="./app.js"></script>
   </body>
 </html>

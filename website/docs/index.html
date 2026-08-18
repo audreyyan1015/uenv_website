@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="UEnv 使用文档，包含快速开始、VeRL 接入、部署配置、系统架构与核心组件"
+      content="UEnv 使用文档，包含部署、Hub、评测、训练、系统架构与协议参考"
     />
-    <title>UEnv 使用文档 — 快速开始与系统架构</title>
+    <title>UEnv 使用文档 — 部署、评测与训练指南</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -32,7 +32,7 @@
 
         <nav class="topnav" aria-label="主导航">
           <a class="product-home-link" href="../">产品首页</a>
-          <a href="?page=quick-start">快速开始</a>
+          <a href="?page=basic-deployment">部署指南</a>
           <a href="?page=architecture">系统架构</a>
           <a href="?page=uenv-bridge">核心组件</a>
         </nav>
@@ -47,6 +47,15 @@
             <kbd>Ctrl K</kbd>
           </button>
           <span class="version-pill">使用文档预览</span>
+          <button class="icon-button" id="themeButton" type="button" aria-label="切换深色模式">
+            <svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"></circle>
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"></path>
+            </svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 15.2A8.5 8.5 0 0 1 8.8 4a8.5 8.5 0 1 0 11.2 11.2Z"></path>
+            </svg>
+          </button>
         </div>
       </div>
     </header>
@@ -67,10 +76,7 @@
 
           <div class="sidebar-section">
             <p class="sidebar-label">使用指南</p>
-            <a class="sidebar-link" href="?page=quick-start">快速开始</a>
-            <a class="sidebar-link" href="?page=verl-integration">接入 VeRL</a>
-            <a class="sidebar-link" href="?page=configuration">部署与配置</a>
-            <a class="sidebar-link" href="?page=environment-management">发布与同步环境</a>
+            <!-- DOCS:SIDEBAR -->
           </div>
 
           <div class="sidebar-section">
@@ -87,6 +93,13 @@
             <a class="sidebar-link" href="?page=uenv-hub">uenv-hub</a>
           </div>
 
+          <div class="sidebar-status">
+            <span class="status-dot"></span>
+            <div>
+              <strong>使用文档预览版</strong>
+              <span>内容由 uenv_pre_release main 分支自动构建</span>
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -108,8 +121,8 @@
               UEnv 为 LLM 后训练提供统一的环境执行接口。当前已接入 VeRL，整体架构可以继续适配其他训练框架。
             </p>
             <div class="hero-actions">
-              <a class="button primary" href="?page=quick-start">
-                快速开始
+              <a class="button primary" href="?page=basic-deployment">
+                开始部署
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
               </a>
               <a class="button secondary" href="?page=architecture">查看系统架构</a>
@@ -163,340 +176,14 @@
               <p>内容按“先运行、再理解、最后深入组件”的顺序组织，共四个部分。</p>
               <div class="docs-map-grid">
                 <a href="./"><strong>开始</strong><span>概览与使用价值</span></a>
-                <a href="?page=quick-start"><strong>使用指南</strong><span>首次运行、VeRL 接入、部署与环境管理</span></a>
+                <a href="?page=basic-deployment"><strong>使用指南</strong><span>部署、Hub、评测与训练</span></a>
                 <a href="?page=architecture"><strong>系统架构</strong><span>总体架构、接口协议与数据流</span></a>
                 <a href="?page=uenv-bridge"><strong>核心组件</strong><span>Bridge、Server、Worker、Hub</span></a>
               </div>
             </div>
           </section>
 
-          <section class="doc-section" id="quick-start" data-title="快速开始">
-            <h2>快速开始</h2>
-            <p class="lead">下面在一台开发机上启动 Adapter Core 和 Worker，再通过 Adapter Core 提交一个 QA Episode。完成后，你会看到请求经过 Server 调度、由 Worker 执行并返回结果。</p>
-
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>开始前准备</strong><span>需要 Rust 工具链和 <code>grpcurl</code>。下面所有命令都从 UEnv 仓库根目录执行；50051 用于 Adapter Core，50054 用于 Worker，19090 用于 Worker 健康检查。</span></div>
-            </div>
-
-            <h3>构建二进制并创建本地配置</h3>
-            <p>这里关闭 Server 持久化，避免本地首次运行时依赖固定目录和磁盘空间配置。</p>
-            <div class="code-card">
-              <div class="code-header">
-                <div class="code-title"><span class="terminal-dot"></span>Terminal</div>
-                <button class="copy-button" type="button" data-copy-target="quickPrepareCode">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
-                  复制
-                </button>
-              </div>
-              <pre id="quickPrepareCode"><code><span class="code-command">cargo</span> build -p uenv-adapter-core -p uenv-worker --bins
-
-mkdir -p .uenv-local
-printf 'persistence:\n  enabled: false\n' &gt; .uenv-local/server.yaml</code></pre>
-            </div>
-
-            <h3>启动 Adapter Core</h3>
-            <p>Adapter Core 对外提供 gRPC，uenv-server 作为库运行在这个进程内，不需要再启动一个 Server 进程。</p>
-            <div class="code-card">
-              <div class="code-header">
-                <div class="code-title"><span class="terminal-dot"></span>Terminal 1</div>
-                <button class="copy-button" type="button" data-copy-target="adapterStartCode">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
-                  复制
-                </button>
-              </div>
-              <pre id="adapterStartCode"><code>UENV_ADDR=127.0.0.1:50051 \
-  UENV_CONFIG_PATH=.uenv-local/server.yaml \
-  UENV_SERVER_CONFIG_STRICT=1 \
-  <span class="code-command">cargo</span> run -p uenv-adapter-core</code></pre>
-            </div>
-
-            <h3>启动一个只运行 QA 环境的 Worker</h3>
-            <p>这里显式使用仓库内的 QA Manifest 和刚构建的插件二进制，并把日志与 WAL 写到本地临时目录。</p>
-            <div class="code-card">
-              <div class="code-header">
-                <div class="code-title"><span class="terminal-dot"></span>Terminal 2</div>
-                <button class="copy-button" type="button" data-copy-target="workerStartCode">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
-                  复制
-                </button>
-              </div>
-              <pre id="workerStartCode"><code>UENV_SERVER_ENDPOINT=127.0.0.1:50051 \
-  UENV_SCHEDULER_MODE=remote \
-  UENV_WORKER_ID=local-worker \
-  UENV_WORKER_LISTEN=127.0.0.1:50054 \
-  UENV_WORKER_ADVERTISE_ENDPOINT=127.0.0.1:50054 \
-  UENV_ENV_TYPES=qa \
-  UENV_PLUGIN_DIR="$PWD/plugins" \
-  UENV_QA_PLUGIN_BIN="$PWD/target/debug/uenv-math-plugin" \
-  UENV_LOG_FILE="$PWD/.uenv-local/worker.log" \
-  UENV_WAL_DIR="$PWD/.uenv-local/worker-wal" \
-  UENV_METRICS_LISTEN=127.0.0.1:19090 \
-  UENV_HEALTH_LISTEN=127.0.0.1:19090 \
-  <span class="code-command">cargo</span> run -p uenv-worker --bin uenv-worker -- --config config/uenv-worker.yaml serve</code></pre>
-            </div>
-
-            <h3>提交一个 QA Episode</h3>
-            <p>Worker 健康检查通过后，使用 <code>grpcurl</code> 向 Adapter Core 提交一个 GSM8K 示例。请求中的几个 <code>*Json</code> 字段是协议要求的 Base64 编码 JSON。</p>
-            <div class="code-card">
-              <div class="code-header">
-                <div class="code-title"><span class="terminal-dot"></span>Terminal 3</div>
-                <button class="copy-button" type="button" data-copy-target="quickEpisodeCode">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
-                  复制
-                </button>
-              </div>
-              <pre id="quickEpisodeCode"><code>curl -fsS http://127.0.0.1:19090/health
-
-grpcurl -plaintext \
-  -import-path proto \
-  -proto uenv/v1/adapter_core.proto \
-  -d @ \
-  127.0.0.1:50051 \
-  uenv.bridge.v1.AdapterCoreService/ExecuteBatch &lt;&lt;'JSON'
-{
-  "requestId": "quickstart-001",
-  "batchId": "quickstart-batch-001",
-  "samples": [{
-    "requestId": "quickstart-001",
-    "batchId": "quickstart-batch-001",
-    "sampleIndex": 0,
-    "framework": "quick-start",
-    "envType": "qa",
-    "parallelMode": "sync",
-    "correlationId": "quickstart-001",
-    "timeoutSeconds": 120,
-    "envConfigJson": "eyJkYXRhc2V0IjoiZ3NtOGsifQ==",
-    "episodeConfigJson": "eyJtYXhfc3RlcHMiOjEsInNlZWQiOjQyfQ==",
-    "rewardConfigJson": "eyJ0eXBlIjoicnVsZV9yZXdhcmQiLCJ0YXJnZXQiOiI3MiJ9",
-    "sampleContextJson": "eyJjYXNlIjoicXVpY2stc3RhcnQiLCJiZW5jaG1hcmsiOiJnc204ayIsImJhdGNoX2lkIjoicXVpY2tzdGFydC1iYXRjaC0wMDEifQ=="
-  }]
-}
-JSON</code></pre>
-            </div>
-
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>成功标志</strong><span>响应的第一条结果包含 <code>"status": "completed"</code> 和 <code>"reward": 1</code>。这个示例不调用模型，只用于确认 Adapter Core、Server、Worker 和 QA 插件能够协同工作；接入真实训练前仍需配置模型地址。</span></div>
-            </div>
-
-            <h3>如果没有通过</h3>
-            <div class="module-list">
-              <div><code>grpcurl: not found</code><span>先安装 <code>grpcurl</code>，确认终端可以直接执行 <code>grpcurl -version</code>。</span></div>
-              <div><code>no worker supports env type qa</code><span>检查 Worker 是否完成注册，以及 <code>UENV_ENV_TYPES</code>、<code>UENV_PLUGIN_DIR</code> 和 <code>UENV_QA_PLUGIN_BIN</code> 是否正确。</span></div>
-              <div><code>timeout / dispatch failed</code><span>先查看 Terminal 1，再检查 <code>.uenv-local/worker.log</code> 中的注册、插件启动和结果回报日志。</span></div>
-            </div>
-          </section>
-
-          <section class="doc-section" id="verl-integration" data-title="接入 VeRL">
-            <h2>接入 VeRL</h2>
-            <p class="lead">先确认“快速开始”的示例 Episode 能够完成，再把 Bridge 安装到现有 VeRL 训练环境。UEnv 接管的是 rollout 前的 AgentLoop；模型、数据集和训练参数仍由 VeRL 配置。</p>
-
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>这一页不负责安装 VeRL</strong><span>开始前应已有一条能够启动的 VeRL 训练命令，以及可用的训练模型和 rollout 运行时。Adapter Core 与至少一个支持目标环境的 Worker 也必须已经运行。</span></div>
-            </div>
-
-            <h3>安装 Bridge 并连接 Adapter Core</h3>
-            <div class="code-card">
-              <div class="code-header">
-                <div class="code-title"><span class="terminal-dot"></span>VeRL 环境</div>
-                <button class="copy-button" type="button" data-copy-target="bridgeSetupCode">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
-                  复制
-                </button>
-              </div>
-              <pre id="bridgeSetupCode"><code>python3 -m pip install -e ./uenv-bridge
-
-export UENV_AGENT_LOOP_CLIENT=rust_core
-export UENV_ADAPTER_CORE_ENDPOINT=127.0.0.1:50051</code></pre>
-            </div>
-
-            <h3>在 VeRL 命令中启用 UEnv AgentLoop</h3>
-            <p>把下面两项加入原有 Hydra 参数。配置文件必须使用绝对路径；跨机器部署时还要把 Adapter Core 地址改为 VeRL 机器可访问的地址。</p>
-            <div class="code-card">
-              <div class="code-header">
-                <div class="code-title"><span class="terminal-dot"></span>Hydra overrides</div>
-                <button class="copy-button" type="button" data-copy-target="bridgeVerlConfigCode">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
-                  复制
-                </button>
-              </div>
-              <pre id="bridgeVerlConfigCode"><code>actor_rollout_ref.rollout.agent.default_agent_loop=uenv_agent \
-actor_rollout_ref.rollout.agent.agent_loop_config_path=/absolute/path/to/uenv/uenv-bridge/configs/uenv-agent-loop.yaml</code></pre>
-            </div>
-
-            <h3>确认模型地址来自哪里</h3>
-            <p>Bridge 优先使用样本显式提供的地址或 VeRL rollout 运行时地址。如果当前 VeRL 版本无法暴露该地址，可以设置后备值：</p>
-            <div class="code-card">
-              <div class="code-header">
-                <div class="code-title"><span class="terminal-dot"></span>VeRL 环境</div>
-                <button class="copy-button" type="button" data-copy-target="bridgeModelCode">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
-                  复制
-                </button>
-              </div>
-              <pre id="bridgeModelCode"><code>export UENV_ROLLOUT_MODEL_ENDPOINT=http://127.0.0.1:8000/v1
-export UENV_ROLLOUT_MODEL_NAME=policy-model</code></pre>
-            </div>
-            <p>如果请求中仍没有模型地址，Worker 必须通过 <code>config/uenv-worker-llm.env</code> 或 <code>UENV_WORKER_LLM_ENV</code> 提供默认模型配置；否则真实 Episode 会在模型调用阶段失败。</p>
-
-            <h3>运行后检查什么</h3>
-            <div class="module-list">
-              <div><code>请求对应关系</code><span>每个输入样本都应返回相同 request id 对应的结果，不能缺失或重复。</span></div>
-              <div><code>AgentLoopOutput</code><span>确认 response ids、response mask 和 <code>reward_score</code> 已返回，失败样本没有被静默当作成功。</span></div>
-              <div><code>Worker 日志</code><span>确认 Episode 使用了预期环境和模型地址，并正常完成结果回报。</span></div>
-            </div>
-          </section>
-
-          <section class="doc-section" id="configuration" data-title="部署与配置">
-            <h2>部署与配置</h2>
-            <p class="lead">不要从完整配置表开始。先确定组件部署在哪些机器上，再处理网络地址、环境运行时和持久化目录。Bridge 的训练侧配置已放在“接入 VeRL”页面。</p>
-
-            <h3>先确定部署方式</h3>
-            <div class="config-table-wrap">
-              <table class="config-table">
-                <thead><tr><th>场景</th><th>组件位置</th><th>需要额外处理的内容</th></tr></thead>
-                <tbody>
-                  <tr><td>本地首次运行</td><td>Adapter Core 与一个 Worker 在同一台机器</td><td>使用回环地址、关闭 Server 持久化、只加载 QA 环境；Hub 和模型服务都不是必需项。</td></tr>
-                  <tr><td>单机真实任务</td><td>VeRL、Adapter Core、Worker 可以同机</td><td>提供真实模型地址，使用可持久化的 Server 与 Worker 目录，并按资源设置并发。</td></tr>
-                  <tr><td>多机部署</td><td>VeRL、Adapter Core、Worker 分布在不同节点</td><td>所有注册和回连地址必须跨机可达；再根据环境包需求决定是否部署 Hub。</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>仓库中的 server.yaml 不是本地开发配置</strong><span>它包含 <code>/home/uenv/server-state/</code> 绝对路径和 10 GiB 最低可用空间检查。首次运行应使用“快速开始”生成的本地配置；部署时再换成当前机器可写、可持久化的路径。</span></div>
-            </div>
-
-            <h3>地址之间是什么关系</h3>
-            <div class="config-table-wrap protocol-table-wrap">
-              <table class="config-table">
-                <thead><tr><th>配置</th><th>谁使用</th><th>要求</th></tr></thead>
-                <tbody>
-                  <tr><td><code>UENV_ADDR</code></td><td>Adapter Core</td><td>进程实际绑定的主 gRPC 地址；多机部署通常绑定 <code>0.0.0.0:&lt;port&gt;</code>。</td></tr>
-                  <tr><td><code>UENV_ADAPTER_CORE_ENDPOINT</code></td><td>Bridge</td><td>必须填写 VeRL 所在机器能够访问的 Adapter Core 地址，不能使用远端机器的 <code>127.0.0.1</code>。</td></tr>
-                  <tr><td><code>server.endpoint</code> / <code>UENV_SERVER_ENDPOINT</code></td><td>Worker</td><td>Worker 用它注册、发送心跳和回报结果；当前应指向 Adapter Core 的同一 gRPC 入口。</td></tr>
-                  <tr><td><code>worker.listen</code></td><td>Worker</td><td>本机绑定地址，可以使用 <code>0.0.0.0</code>。</td></tr>
-                  <tr><td><code>worker.advertise_endpoint</code></td><td>Server</td><td>Server 回连 Worker 的地址，必须是 Server 真正能够访问的主机名或 IP，不能填写 <code>0.0.0.0</code>。</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <h3>Worker 启动前必须确认</h3>
-            <div class="config-table-wrap protocol-table-wrap">
-              <table class="config-table">
-                <thead><tr><th>内容</th><th>相关配置</th><th>检查方式</th></tr></thead>
-                <tbody>
-                  <tr><td>环境是否真的可运行</td><td><code>env.types</code>、<code>env.plugin_dir</code> 和对应插件二进制环境变量</td><td>Worker 日志中应出现已加载的环境类型；只声明名称但缺少 Manifest 或程序仍然无法执行。</td></tr>
-                  <tr><td>模型地址</td><td>Episode 中的 <code>model_endpoint</code>，或 <code>llm.env_file</code> / <code>UENV_WORKER_LLM_ENV</code></td><td>真实任务必须至少有一个有效来源；“快速开始”中的 QA 示例不调用模型，不能代替真实 rollout 验证。</td></tr>
-                  <tr><td>本机容量</td><td><code>worker.max_concurrent</code></td><td>结合模型服务、CPU、GPU 和内存容量设置，不要直接照搬示例值。</td></tr>
-                  <tr><td>日志与未回报结果</td><td><code>logging.file</code>、<code>wal.dir</code></td><td>目录必须可写；需要跨进程重启恢复时应放在持久化磁盘。</td></tr>
-                  <tr><td>健康检查</td><td><code>observability.metrics_listen</code> 与 <code>health_listen</code></td><td>当前实现要求两个地址相同；通过该地址访问 <code>/health</code> 和 <code>/metrics</code>。</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <h3>配置覆盖顺序</h3>
-            <div class="module-list">
-              <div><code>Adapter Core / Server</code><span><code>UENV_ADDR</code> 决定主 gRPC 监听地址，<code>UENV_CONFIG_PATH</code> 指向 Server YAML；YAML 负责调度、超时、管理接口和持久化。</span></div>
-              <div><code>Worker</code><span>命令行参数优先于环境变量，环境变量优先于 YAML/JSON，最后才使用代码默认值。</span></div>
-              <div><code>Hub Server</code><span><code>--bind</code> 可覆盖监听地址；其余配置按环境变量、TOML、内置默认值合并，嵌套环境变量使用双下划线，例如 <code>UENV_HUB_AUTH__REQUIRE_TOKEN</code>。</span></div>
-              <div><code>Hub CLI</code><span>显式 <code>--endpoint</code> 优先，其次是 <code>UENV_HUB_ENDPOINT</code> / <code>UENV_HUB_TOKEN</code>、用户配置文件和默认值。</span></div>
-            </div>
-
-            <h3>多机部署检查</h3>
-            <div class="module-list">
-              <div><code>VeRL → Adapter Core</code><span>从 VeRL 节点测试 Adapter Core 主 gRPC 端口可达。</span></div>
-              <div><code>Worker → Adapter Core</code><span>Worker 必须能够完成注册、心跳和结果回报。</span></div>
-              <div><code>Adapter Core → Worker</code><span>从 Adapter Core 节点测试每个 <code>advertise_endpoint</code> 可达；容器或 NAT 场景不能直接复用绑定地址。</span></div>
-              <div><code>持久化与密钥</code><span>Server 数据库、Worker WAL、Hub 数据库和 artifact 目录使用持久化磁盘；Hub token 和模型 API key 不写入仓库。</span></div>
-            </div>
-
-          </section>
-
-          <section class="doc-section" id="environment-management" data-title="发布与同步环境">
-            <h2>发布与同步环境</h2>
-            <p class="lead">Hub 是可选的部署组件，不在 Episode 实时执行链路中。环境作者向它发布 Environment Manifest；需要大文件或离线依赖时，运维再把已经发布的 EnvPackage 同步到 Worker 或 Agent 节点。</p>
-
-            <h3>启动本地 Hub</h3>
-            <p>下面关闭鉴权只用于本机体验。共享环境应保留默认鉴权，并由管理员提供具有相应权限的 token。</p>
-            <div class="code-card">
-              <div class="code-header">
-                <div class="code-title"><span class="terminal-dot"></span>Terminal 1</div>
-                <button class="copy-button" type="button" data-copy-target="hubStartCode">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
-                  复制
-                </button>
-              </div>
-              <pre id="hubStartCode"><code>cd uenv-hub
-UENV_HUB_AUTH__REQUIRE_TOKEN=false cargo run -p uenv-hub-server</code></pre>
-            </div>
-
-            <h3>构建并连接 CLI</h3>
-            <div class="code-card">
-              <div class="code-header">
-                <div class="code-title"><span class="terminal-dot"></span>Terminal 2</div>
-                <button class="copy-button" type="button" data-copy-target="hubCliCode">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
-                  复制
-                </button>
-              </div>
-              <pre id="hubCliCode"><code>cd uenv-hub
-cargo build -p uenv-hub-client
-export PATH="$PWD/target/debug:$PATH"
-export UENV_HUB_ENDPOINT=http://127.0.0.1:8080
-
-uenv hub status
-uenv env list</code></pre>
-            </div>
-
-            <p>连接需要鉴权的共享 Hub 时，可以设置 <code>UENV_HUB_TOKEN</code>，也可以执行 <code>uenv hub login --endpoint &lt;url&gt; --token &lt;token&gt;</code> 保存连接信息。</p>
-
-            <h3>环境作者：发布 Environment Manifest</h3>
-            <p>这条路径发布环境名称、版本、接口和运行要求等元数据。先生成项目，再编辑并校验其中的 <code>manifest.toml</code>。</p>
-            <div class="code-card">
-              <div class="code-header">
-                <div class="code-title"><span class="terminal-dot"></span>环境作者</div>
-                <button class="copy-button" type="button" data-copy-target="hubPublishEnvCode">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
-                  复制
-                </button>
-              </div>
-              <pre id="hubPublishEnvCode"><code>uenv env init myqa --template qa
-cd myqa
-
-<span class="code-comment"># 编辑 manifest.toml 后执行</span>
-uenv env validate
-uenv env publish --manifest manifest.toml</code></pre>
-            </div>
-
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>发布 Manifest 不会自动创建 EnvPackage</strong><span><code>uenv env publish</code> 写入环境注册元数据；<code>uenv env sync</code> 消费的是另一类已经发布的 EnvPackage。两者可以描述同一环境，但不是同一个对象。</span></div>
-            </div>
-
-            <h3>运行节点：同步已有 EnvPackage</h3>
-            <p>这一步在 Worker 或 Agent 节点执行。示例使用当前目录下的可写路径；生产环境可以换成持久化的节点目录。</p>
-            <div class="code-card">
-              <div class="code-header">
-                <div class="code-title"><span class="terminal-dot"></span>Worker 节点</div>
-                <button class="copy-button" type="button" data-copy-target="hubSyncCode">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
-                  复制
-                </button>
-              </div>
-              <pre id="hubSyncCode"><code>export UENV_HUB_ENDPOINT=http://127.0.0.1:8080
-export PATH="/absolute/path/to/uenv/uenv-hub/target/debug:$PATH"
-
-uenv env sync &lt;package-id&gt; \
-  --version &lt;version&gt; \
-  --target-dir "$PWD/.uenv-packages" \
-  --worker-version 0.1.0</code></pre>
-            </div>
-
-            <p>CLI 会把文件写入 <code>.uenv-packages/envs/&lt;package&gt;/&lt;version&gt;/</code>，逐个校验 SHA-256 并写入 <code>.synced</code>，随后再让运行时指向这个本地目录。Agent 节点同步时还应按包声明传入相应的 <code>--consumer</code>，例如 <code>--consumer toolenv-agent</code>。EnvPackage 必须事先由运维或包发布流程写入 Hub；当前基础环境脚手架不会替你生成它。</p>
-          </section>
+          <!-- DOCS:CONTENT -->
 
           <section class="doc-section architecture-section" id="architecture" data-title="架构总览">
             <h2>系统架构总览</h2>
@@ -535,14 +222,14 @@ uenv env sync &lt;package-id&gt; \
                   <div class="architecture-logo">H</div>
                   <h3>uenv-hub</h3>
                   <p>环境元数据与制品管理</p>
-                  <ul><li>管理环境版本和 Manifest</li><li>提供元数据与制品同步计划</li></ul>
+                  <ul><li>管理环境版本和 Manifest</li><li>Worker 需要时查询或下载</li></ul>
                 </article>
               </div>
             </div>
 
             <div class="callout note">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>两个容易混淆的边界</strong><span>Bridge 的 gRPC 请求先到 Adapter Core，再由 Adapter Core 调用进程内的 Server 模块。Hub 不是每次 Episode 的必经步骤：运行节点在启动前同步制品，Worker 只按需查询环境元数据。</span></div>
+              <div><strong>两个容易混淆的边界</strong><span>Bridge 的 gRPC 请求先到 Adapter Core，再由 Adapter Core 调用进程内的 Server 模块。Hub 不是每次 Episode 的必经步骤，Worker 只在需要解析或同步环境包时访问 Hub。</span></div>
             </div>
 
             <h3>组件之间如何通信</h3>
@@ -550,10 +237,10 @@ uenv env sync &lt;package-id&gt; \
               <table class="config-table">
                 <thead><tr><th>通信方向</th><th>方式</th><th>传递内容</th></tr></thead>
                 <tbody>
-                  <tr><td>Bridge ↔ Adapter Core</td><td>gRPC</td><td>Episode 请求和执行结果</td></tr>
+                  <tr><td>Bridge → Adapter Core</td><td>gRPC</td><td>训练样本和执行结果</td></tr>
                   <tr><td>Adapter Core → Server</td><td>进程内函数调用</td><td>Episode 请求和结果</td></tr>
                   <tr><td>Server ↔ Worker / Agent</td><td>gRPC</td><td>注册、心跳、任务分发和结果回报</td></tr>
-                  <tr><td>Worker / CLI → Hub</td><td>HTTP，启动或部署阶段调用</td><td>环境元数据、同步计划和制品</td></tr>
+                  <tr><td>Worker → Hub</td><td>HTTP，按需调用</td><td>环境版本、Manifest 和制品</td></tr>
                 </tbody>
               </table>
             </div>
@@ -561,28 +248,24 @@ uenv env sync &lt;package-id&gt; \
 
           <section class="doc-section component-detail" id="uenv-bridge" data-title="uenv-bridge">
             <div class="component-heading"><span class="component-tag">PY</span><div><h2>uenv-bridge</h2><p>训练框架适配层</p></div></div>
-            <p class="lead">uenv-bridge 是运行在 VeRL 进程中的 Python 适配层。它在 rollout 生成前接管样本，把 prompt、采样参数和环境信息转换为 UEnv Episode；Server 与 Worker 完成生成和环境执行后，Bridge 再把结果交还 VeRL 继续训练。</p>
+            <p class="lead">uenv-bridge 当前面向 VeRL，把 VeRL 的 rollout 样本转换为 UEnv 请求，并把执行结果转换回 VeRL 可继续训练的数据。</p>
 
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>Bridge 不是需要单独启动的服务</strong><span><code>UEnvAgentLoop</code> 由 VeRL 加载并运行。它通过 gRPC 调用 <code>uenv-adapter-core</code>；Adapter Core 才是独立服务进程，并在进程内使用 uenv-server。</span></div>
+            <h3>主要职责</h3>
+            <div class="detail-grid">
+              <div class="detail-card"><strong>接入 VeRL</strong><p>在 VeRL 的 AgentLoop 阶段接收 prompt、采样参数和环境配置。</p></div>
+              <div class="detail-card"><strong>统一数据格式</strong><p>把训练侧数据转换成 UEnv 的 Episode 请求，避免训练框架直接依赖 Server 和 Worker 的内部结构。</p></div>
+              <div class="detail-card"><strong>回填训练结果</strong><p>把响应、奖励、轨迹和结束原因整理成 VeRL 能继续使用的结果。</p></div>
             </div>
 
-            <h3>接入后发生了什么</h3>
+            <h3>一次请求如何经过 Bridge</h3>
             <div class="steps compact-steps">
-              <div class="step"><span>1</span><div><h3>把训练样本转换为 Episode</h3><p><code>UEnvAgentLoop</code> 在 rollout 前接收 VeRL 样本，整理 prompt、token ids、环境类型、采样参数、随机种子和奖励配置。请求只携带输入，响应由 UEnv 侧生成。</p></div></div>
-              <div class="step"><span>2</span><div><h3>通过 Adapter Core 进入调度层</h3><p>Bridge 使用 gRPC 提交 Episode。Adapter Core 负责网络入口，再把请求交给进程内的 Server 选择 Worker 或 Agent。</p></div></div>
-              <div class="step"><span>3</span><div><h3>把结果恢复为 VeRL 输出</h3><p>Bridge 按 request id 对应原始样本，把响应 token、mask、奖励、轨迹和结束原因整理成 <code>AgentLoopOutput</code>。</p></div></div>
+              <div class="step"><span>1</span><div><h3>接收样本</h3><p>VeRL 将当前 rollout 样本交给 UEnv AgentLoop。</p></div></div>
+              <div class="step"><span>2</span><div><h3>生成请求</h3><p>Bridge 整理 prompt、模型地址、采样参数和环境配置。</p></div></div>
+              <div class="step"><span>3</span><div><h3>调用 Adapter Core</h3><p>Bridge 通过本地 gRPC 发送请求。Adapter Core 再调用进程内的 Server 模块。</p></div></div>
+              <div class="step"><span>4</span><div><h3>返回 VeRL</h3><p>Bridge 收到 Episode 结果后，恢复成 VeRL 需要的数据结构。</p></div></div>
             </div>
 
-            <h3>数据边界</h3>
-            <div class="module-list">
-              <div><code>训练侧输入</code><span>prompt、采样参数、样本元数据、环境与奖励配置；Bridge 不接管 Server 和 Worker 的内部状态。</span></div>
-              <div><code>UEnv 侧输出</code><span>response ids、response mask、奖励、trajectory 和 finish reason；模型生成与环境执行发生在 Worker 或 Agent。</span></div>
-              <div><code>样本对应关系</code><span>结果顺序可以变化，但 request id 必须唯一对应输入样本；缺失、重复或未知 id 都会被视为错误。</span></div>
-            </div>
-
-            <div class="boundary-note"><strong>当前支持范围</strong><span>当前 Bridge 只维护 VeRL pre-rollout AgentLoop 路径。它不负责全局任务调度，也不直接运行环境；其他训练框架适配器仍属于可扩展方向，不是现有能力。</span></div>
+            <div class="boundary-note"><strong>当前支持范围</strong><span>当前 Bridge 只维护 VeRL pre-rollout AgentLoop 路径。架构可以继续增加其他训练框架适配器，但页面不把尚未接入的框架列为现有能力。</span></div>
           </section>
 
           <section class="doc-section" id="data-flow" data-title="Episode 数据流">
@@ -688,82 +371,50 @@ uenv env sync &lt;package-id&gt; \
 
           <section class="doc-section component-detail" id="uenv-worker" data-title="uenv-worker">
             <div class="component-heading"><span class="component-tag rust">RS</span><div><h2>uenv-worker</h2><p>环境执行与实例运行时</p></div></div>
-            <p class="lead">uenv-worker 是部署在执行节点上的独立进程。它向 Server 注册本机能力并持续发送心跳，同时开放 gRPC 地址供 Server 下发 Episode；收到任务后，Worker 在本机创建或复用环境实例，完成模型生成、环境交互、奖励计算和结果回报。</p>
+            <p class="lead">uenv-worker 连接 Server，接收已分配的 Episode，在本机准备环境实例、调用模型、执行环境步骤，并回报结果。</p>
 
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>Worker 与 Server 有两个通信方向</strong><span>Worker → Server：注册、心跳和最终结果回报。Server → Worker：根据注册时上报的地址调用 <code>DispatchEpisode</code>。因此本机绑定地址和 Server 实际回连的地址是两个概念。</span></div>
+            <h3>主要职责</h3>
+            <div class="detail-grid">
+              <div class="detail-card"><strong>报告能力</strong><p>向 Server 注册支持的环境、资源、容量和网络地址，并持续发送心跳。</p></div>
+              <div class="detail-card"><strong>管理环境实例</strong><p>创建、预热、复用和回收环境实例，减少重复启动带来的等待。</p></div>
+              <div class="detail-card"><strong>执行并回报</strong><p>调用模型和环境插件，生成响应、奖励与轨迹，并把最终结果回报 Server。</p></div>
             </div>
 
-            <h3>先认识三个概念</h3>
-            <div class="config-table-wrap protocol-table-wrap">
-              <table class="config-table">
-                <thead><tr><th>名称</th><th>含义</th></tr></thead>
-                <tbody>
-                  <tr><td>环境插件</td><td>实现环境 <code>reset / step / close</code> 的本地程序。Worker 通过插件目录中的 Manifest 找到启动入口。</td></tr>
-                  <tr><td>环境实例</td><td>插件启动后可执行一个或多个 Episode 的运行实例，具有自己的状态和生命周期。</td></tr>
-                  <tr><td>实例池</td><td>保存可复用实例的本地池。池中没有可用实例时才创建新的实例，任务完成后再决定复用或回收。</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <h3>一个 Episode 在 Worker 内怎样运行</h3>
+            <h3>一次任务如何执行</h3>
             <div class="steps compact-steps">
-              <div class="step"><span>1</span><div><h3>建立双向联系</h3><p>Worker 向 Server 注册环境类型、资源、容量和回连地址，并用心跳维持可用状态；Server 根据这个地址把 Episode 发回 Worker。</p></div></div>
-              <div class="step"><span>2</span><div><h3>接纳任务</h3><p>Worker 校验 Episode、调度租约和重复请求，再申请本机并发名额。全局并发由 Server 控制，本机并发由 Worker 再限制一层。</p></div></div>
-              <div class="step"><span>3</span><div><h3>取得环境实例</h3><p>Worker 优先复用实例池中的空闲实例；没有可用实例时才启动插件进程。实例可以按需创建，也可以在 Worker 启动时预热。</p></div></div>
-              <div class="step"><span>4</span><div><h3>执行模型—环境循环</h3><p>模型根据当前观测生成 action，插件执行 <code>step</code> 并返回新观测和奖励；循环持续到环境结束、达到步数限制或发生错误。</p></div></div>
-              <div class="step"><span>5</span><div><h3>回报结果并处理实例</h3><p>Worker 在执行期间报告进度，完成后把奖励、轨迹和结束状态单独回报 Server。回报暂时失败的结果写入 WAL，连接恢复后重放；环境实例则返回池中或被关闭。</p></div></div>
+              <div class="step"><span>1</span><div><h3>启动并注册</h3><p>Worker 加载配置，启动服务，并向 Server 报告自己的能力和容量。</p></div></div>
+              <div class="step"><span>2</span><div><h3>接收任务</h3><p>Worker 检查任务是否有效，并确认本机仍有可用容量。</p></div></div>
+              <div class="step"><span>3</span><div><h3>准备环境</h3><p>优先使用已预热的环境实例；需要新的环境包时，按需从 Hub 获取信息和制品。</p></div></div>
+              <div class="step"><span>4</span><div><h3>执行并回报</h3><p>Worker 完成模型生成和环境交互，再把最终结果回报 Server。</p></div></div>
             </div>
 
-            <h3>Worker 与 Hub 的边界</h3>
-            <p>Hub 提供环境版本和制品信息，Worker 负责执行。元数据查询和制品同步也不是同一个动作：</p>
-            <div class="config-table-wrap protocol-table-wrap">
-              <table class="config-table">
-                <thead><tr><th>场景</th><th>当前行为</th></tr></thead>
-                <tbody>
-                  <tr><td>普通插件环境</td><td>Worker 从本地插件目录加载程序和 Manifest；启用 Hub 后，可以在启动或首次创建实例前拉取环境元数据，但不会为每个 Episode 下载插件。</td></tr>
-                  <tr><td>EnvPackage / SWE 制品</td><td>部署流程先从 Hub 下载并校验到节点目录，Worker 随后读取这些本地文件。同步不属于 Episode 执行过程。</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="boundary-note"><strong>职责边界</strong><span>Worker 只执行 Server 已分配的任务，不决定全局调度，也不维护环境版本的权威信息。SWE 容器与 Runtime Gateway 属于可选高级路径，不等同于上面的普通插件执行流程。</span></div>
+            <div class="boundary-note"><strong>职责边界</strong><span>Worker 执行 Server 已分配的任务，但不决定全局调度，也不负责维护环境版本的权威信息。</span></div>
           </section>
 
           <section class="doc-section component-detail" id="uenv-hub" data-title="uenv-hub">
             <div class="component-heading"><span class="component-tag rust">RS</span><div><h2>uenv-hub</h2><p>环境元数据与制品管理</p></div></div>
-            <p class="lead">uenv-hub 是独立部署的环境注册中心。它通过 HTTP API 和 <code>uenv</code> CLI 管理环境版本、接口定义、EnvPackage、Agent Bridge 与 Episode Stack；元数据保存在 SQLite，随包发布的制品保存在配置的 artifact 目录。</p>
+            <p class="lead">uenv-hub 保存环境、版本、Manifest 和环境包信息，为 Worker 提供查询与下载接口。</p>
 
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>Hub 不在 Episode 的实时执行链路中</strong><span>发布、版本解析和制品同步通常发生在部署或启动阶段。Episode 开始后，Hub 不选择 Worker，不调用模型，也不接收训练结果。</span></div>
+            <h3>主要职责</h3>
+            <div class="detail-grid">
+              <div class="detail-card"><strong>管理环境版本</strong><p>记录环境名称、版本、接口定义和发布状态。</p></div>
+              <div class="detail-card"><strong>管理环境包</strong><p>保存环境包及其校验信息，供 Worker 按需同步。</p></div>
+              <div class="detail-card"><strong>提供访问控制</strong><p>支持鉴权、权限、限流和审计等管理能力。</p></div>
             </div>
 
-            <h3>先区分三个基础对象</h3>
-            <div class="config-table-wrap protocol-table-wrap">
-              <table class="config-table">
-                <thead><tr><th>对象</th><th>保存的内容</th><th>主要用途</th></tr></thead>
-                <tbody>
-                  <tr><td>Environment Manifest</td><td>环境名称、版本、运行入口、资源需求、配置 Schema、接口 Schema、示例和 rubric。</td><td>让 Server、Worker 和工具理解一个环境版本提供什么能力。</td></tr>
-                  <tr><td>EnvPackage</td><td>平台要求、Worker overlay、制品列表、下载地址、大小和 SHA-256 摘要。</td><td>把 Worker 或 Agent 节点需要的文件作为一个可验证版本整体同步。</td></tr>
-                  <tr><td>Artifact</td><td>EnvPackage 中的具体文件，例如 catalog、配置、规则文件或镜像 tar。</td><td>由 CLI 下载并校验，避免节点使用不一致的制品。</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>Agent 路径还有两个组合对象</strong><span>Agent Bridge 固定 Agent scaffold 的版本；Episode Stack 再把环境、Agent scaffold、Runtime Gateway 和 EnvPackage 组合成一套可验证的启动计划。初次理解普通 Worker 路径时可以先跳过它们。</span></div>
-            </div>
-
-            <h3>元数据和制品如何流动</h3>
+            <h3>Worker 什么时候访问 Hub</h3>
             <div class="steps compact-steps">
-              <div class="step"><span>1</span><div><h3>发布</h3><p>环境作者提交 Manifest、接口 Schema 或 EnvPackage。Hub 先校验结构和引用关系，再把版本元数据写入 SQLite，把制品写入 artifact 存储。</p></div></div>
-              <div class="step"><span>2</span><div><h3>解析</h3><p>调用方可以使用精确版本、<code>latest</code> 或版本约束查询。Hub 将它解析为确定版本，并返回对应 Manifest 或同步计划。</p></div></div>
-              <div class="step"><span>3</span><div><h3>同步</h3><p>节点按同步计划下载文件并校验 SHA-256 摘要，得到内容确定的本地目录。Worker 或 Agent 运行时读取该目录，而不是在每个 Episode 中临时取包。</p></div></div>
+              <div class="step"><span>1</span><div><h3>解析环境引用</h3><p>Worker 根据请求中的环境包和版本信息查询 Hub。</p></div></div>
+              <div class="step"><span>2</span><div><h3>获取 Manifest</h3><p>Hub 返回环境定义、版本和需要同步的制品信息。</p></div></div>
+              <div class="step"><span>3</span><div><h3>同步到本地</h3><p>Worker 下载并校验缺少的制品，然后创建环境实例。</p></div></div>
             </div>
 
+            <div class="callout note">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
+              <div><strong>Hub 不是每次 Episode 的必经步骤</strong><span>如果 Worker 已经具备所需环境和版本，就可以直接执行任务；只有需要解析或同步环境包时才访问 Hub。</span></div>
+            </div>
+
+            <div class="boundary-note"><strong>职责边界</strong><span>Hub 管理环境元数据和制品，不参与 Worker 选择、Episode 调度和训练结果返回。</span></div>
           </section>
 
           <nav class="page-pagination" id="pagePagination" aria-label="使用文档分页"></nav>
@@ -772,7 +423,7 @@ uenv env sync &lt;package-id&gt; \
 
       <aside class="toc" aria-label="本页目录">
         <p>本页内容</p>
-        <nav id="tocNav" aria-label="本页小节"></nav>
+        <nav id="tocNav" aria-label="本页标题目录"></nav>
         <div class="toc-help">
           <span>继续了解实现细节</span>
           <a href="?page=uenv-bridge">查看核心组件 →</a>
@@ -784,7 +435,7 @@ uenv env sync &lt;package-id&gt; \
       <div class="search-panel">
         <div class="search-input-wrap">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
-          <input id="searchInput" type="search" placeholder="搜索快速开始、架构、组件…" autocomplete="off" />
+          <input id="searchInput" type="search" aria-label="搜索使用文档" placeholder="搜索部署、评测、训练、架构或组件…" autocomplete="off" />
           <kbd>ESC</kbd>
         </div>
         <div class="search-results" id="searchResults"></div>
@@ -792,6 +443,7 @@ uenv env sync &lt;package-id&gt; \
       </div>
     </div>
 
+    <!-- DOCS:PAGE_DATA -->
     <script src="./app.js"></script>
   </body>
 </html>
