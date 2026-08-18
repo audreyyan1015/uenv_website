@@ -47,14 +47,14 @@ export const sections = Object.freeze([
         page("usage/evaluation.md", "evaluation", "通用评测流程"),
         page("cases/evaluation-gsm8k.md", "case-eval-gsm8k", "数学问答"),
         page("cases/evaluation-code.md", "case-eval-code", "代码生成"),
-        page("cases/evaluation-swe-verified.md", "case-eval-swe", "软件工程修复"),
+        page("cases/evaluation-swe-verified.md", "case-eval-swe", "代码修复"),
       ]),
       subsection("强化学习训练", [
         page("usage/post-training.md", "training", "强化学习训练指南"),
         page("cases/training-gsm8k-verl.md", "case-train-gsm8k", "数学问答"),
         page("cases/training-code-verl.md", "case-train-code", "代码生成"),
         page("cases/training-process-plugin.md", "case-train-plugin", "自定义环境"),
-        page("cases/training-swe-smith-verl.md", "case-train-swe", "软件工程修复"),
+        page("cases/training-swe-smith-verl.md", "case-train-swe", "代码修复"),
       ]),
       subsection("结果与轨迹", [
         page("usage/trajectory.md", "trajectory", "轨迹采集指南"),
