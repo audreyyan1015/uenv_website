@@ -32,8 +32,8 @@ export const sections = Object.freeze([
       ]),
       subsection("连接服务", [
         page("deployment/server.md", "server", "配置 UEnv Server"),
-        page("deployment/worker-registration.md", "worker-registration", "配置并注册 Worker"),
-        page("deployment/hub.md", "hub", "部署和使用 Hub"),
+        page("deployment/worker-registration.md", "worker-registration", "配置并注册 UEnv Worker"),
+        page("deployment/hub.md", "hub", "部署和使用 UEnv Hub"),
       ]),
     ],
   }),
@@ -82,7 +82,7 @@ export const sections = Object.freeze([
     pages: [
       page("reference/glossary.md", "glossary", "术语表"),
       page("reference/ports.md", "ports", "端口与连接方向"),
-      page("reference/configuration.md", "configuration", "Server 与 Worker 配置参考"),
+      page("reference/configuration.md", "configuration", "UEnv Server 与 UEnv Worker 配置参考"),
       page("reference/protocols.md", "protocols", "协议与调用方向"),
     ],
   }),

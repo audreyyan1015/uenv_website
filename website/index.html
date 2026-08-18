@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="UEnv 是面向 LLM 后训练的分布式环境执行框架，训练框架将任务数据直接转换为标准数据包，由 Server、Worker 与 Hub 完成环境执行和环境元数据管理。"
+      content="UEnv 是面向 LLM 后训练的分布式环境执行框架，训练框架将任务数据直接转换为标准数据包，由 UEnv Server、UEnv Worker 与 UEnv Hub 完成环境执行和环境元数据管理。"
     />
     <meta name="theme-color" content="#07111f" />
     <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
@@ -297,7 +297,7 @@
         <div class="section-shell section-block quickstart-grid">
           <div class="quickstart-copy reveal">
             <h2>启动 UEnv 核心服务</h2>
-            <p>从仓库根目录构建 UEnv Server 与 Worker，再启动独立的 uenv-hub，并让 Worker 连接当前控制面与环境注册中心。</p>
+            <p>从仓库根目录构建 UEnv Server 与 Worker，再启动独立的 uenv-hub，并让 UEnv Worker 连接当前控制面与环境注册中心。</p>
             <div class="quickstart-points">
               <span><i>01</i> 构建核心组件</span>
               <span><i>02</i> 启动 UEnv Server</span>
