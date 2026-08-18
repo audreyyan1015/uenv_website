@@ -34,7 +34,7 @@ GZIP_TYPES = (
 )
 GZIP_MIN_SIZE = 1024
 VENDOR_CACHE = "public, max-age=604800"  # 7 days: fingerprinted runtime drops
-ASSET_CACHE = "public, max-age=3600"  # 1 hour: app.js / styles.css / images
+ASSET_CACHE = "no-cache"  # revalidate each load; 304 makes this cheap
 HTML_CACHE = "no-cache"  # always revalidate; cheap once 304 works
 
 
