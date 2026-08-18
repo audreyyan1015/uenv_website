@@ -120,11 +120,14 @@
   const pageBySlug = new Map(PAGE_DEFS.map((page) => [page.slug, page]));
   const pageById = new Map(PAGE_DEFS.map((page) => [page.id, page]));
 
+  function resolveSlug(slug) {
+    return pageBySlug.get(PAGE_ALIASES.get(slug) || slug);
+  }
+
   function pageFromLink(link) {
     try {
       const url = new URL(link.href, window.location.href);
-      const requested = url.searchParams.get("page") || "overview";
-      return pageBySlug.get(PAGE_ALIASES.get(requested) || requested);
+      return resolveSlug(url.searchParams.get("page") || "overview");
     } catch {
       return undefined;
     }
@@ -132,99 +135,20 @@
 
   function pageContainingHash(hash) {
     if (!hash) return undefined;
-    const direct = pageById.get(hash) || pageBySlug.get(PAGE_ALIASES.get(hash) || hash);
+    const direct = pageById.get(hash) || resolveSlug(hash);
     if (direct) return direct;
     const target = document.getElementById(hash);
     const owner = target?.closest(".doc-section[id]");
     return owner ? pageById.get(owner.id) : undefined;
   }
 
-  const params = new URLSearchParams(window.location.search);
-  const requestedSlug = params.get("page");
-  const normalizedSlug = PAGE_ALIASES.get(requestedSlug) || requestedSlug;
-  const hash = decodedHash();
-  const canonicalHash = PAGE_ALIASES.has(hash) ? "" : hash;
-  const hashPage = pageContainingHash(hash);
-  const currentPage = pageBySlug.get(normalizedSlug)
-    || hashPage
-    || pageBySlug.get("overview")
-    || PAGE_DEFS[0];
-  const currentIndex = PAGE_DEFS.indexOf(currentPage);
-  const currentSection = document.getElementById(currentPage.id);
-  if (!currentSection) return;
-
-  if ((requestedSlug && normalizedSlug !== requestedSlug) || (requestedSlug && !pageBySlug.has(normalizedSlug))) {
-    window.history.replaceState(null, "", pageUrl(currentPage, canonicalHash));
-  } else if (!requestedSlug && hashPage && hashPage.slug !== "overview") {
-    window.history.replaceState(null, "", pageUrl(hashPage, canonicalHash === hashPage.id ? "" : canonicalHash));
-  }
+  let currentPage;
+  let currentIndex = 0;
+  let currentSection;
+  let activeSidebarLink;
+  let tocObserver;
 
   root.dataset.theme = "light";
-  document.title = `UEnv 文档 — ${currentPage.title}`;
-  sections.forEach((section) => {
-    const isCurrent = section.id === currentPage.id;
-    section.hidden = !isCurrent;
-    section.classList.toggle("is-current-page", isCurrent);
-  });
-
-  const sectionLanding = PAGE_DEFS.find((page) => page.section === currentPage.section) || currentPage;
-  if (breadcrumbSection) {
-    breadcrumbSection.textContent = currentPage.section;
-    breadcrumbSection.href = pageUrl(sectionLanding);
-  }
-  if (breadcrumbSubsection && breadcrumbSubsectionSeparator) {
-    const hasSubsection = Boolean(currentPage.subsection);
-    breadcrumbSubsection.hidden = !hasSubsection;
-    breadcrumbSubsectionSeparator.hidden = !hasSubsection;
-    breadcrumbSubsection.textContent = currentPage.subsection;
-  }
-  if (breadcrumbCurrent) breadcrumbCurrent.textContent = currentPage.title;
-
-  topnavLinks.forEach((link) => {
-    const isCurrent = link.dataset.section === currentPage.section;
-    link.classList.toggle("active", isCurrent);
-    if (isCurrent) link.setAttribute("aria-current", "location");
-    else link.removeAttribute("aria-current");
-  });
-
-  let activeSidebarLink;
-  sidebarLinks.forEach((link) => {
-    const isCurrent = pageFromLink(link)?.slug === currentPage.slug;
-    link.classList.toggle("active", isCurrent);
-    if (isCurrent) {
-      activeSidebarLink = link;
-      link.setAttribute("aria-current", "page");
-    } else {
-      link.removeAttribute("aria-current");
-    }
-  });
-
-  document.querySelectorAll(".sidebar-section").forEach((details) => {
-    const containsCurrent = details.contains(activeSidebarLink);
-    details.open = containsCurrent;
-    details.classList.toggle("contains-current", containsCurrent);
-  });
-  document.querySelectorAll(".sidebar-subsection").forEach((details) => {
-    const containsCurrent = details.contains(activeSidebarLink);
-    details.open = containsCurrent;
-    details.classList.toggle("contains-current", containsCurrent);
-  });
-  requestAnimationFrame(() => activeSidebarLink?.scrollIntoView({ block: "center" }));
-
-  function renderPagination() {
-    if (!pagePagination) return;
-    const previous = PAGE_DEFS[currentIndex - 1];
-    const next = PAGE_DEFS[currentIndex + 1];
-    const previousLink = previous
-      ? `<a class="page-pagination-link previous" href="${pageUrl(previous)}"><span>上一页 · ${escapeHtml([previous.section, previous.subsection].filter(Boolean).join(" / "))}</span><strong>← ${escapeHtml(previous.title)}</strong></a>`
-      : '<span class="page-pagination-spacer" aria-hidden="true"></span>';
-    const nextLink = next
-      ? `<a class="page-pagination-link next" href="${pageUrl(next)}"><span>下一页 · ${escapeHtml([next.section, next.subsection].filter(Boolean).join(" / "))}</span><strong>${escapeHtml(next.title)} →</strong></a>`
-      : '<span class="page-pagination-spacer" aria-hidden="true"></span>';
-    pagePagination.innerHTML = `${previousLink}<span class="page-pagination-count">${currentIndex + 1} / ${PAGE_DEFS.length}</span>${nextLink}`;
-  }
-
-  let tocObserver;
 
   function setActiveToc(id) {
     [tocNav, inlineTocNav].forEach((navigation) => {
@@ -246,7 +170,10 @@
     const hasHeadings = headings.length > 0;
     if (toc) toc.hidden = !hasHeadings;
     if (inlineToc) inlineToc.hidden = !hasHeadings;
-    if (!hasHeadings) return;
+    if (!hasHeadings) {
+      tocObserver?.disconnect();
+      return;
+    }
 
     headings.forEach((heading, index) => {
       if (!heading.id) heading.id = `${currentPage.id}-heading-${index + 1}`;
@@ -274,14 +201,47 @@
     }
   }
 
-  function scrollToHash() {
-    if (!hash) return;
-    const target = document.getElementById(canonicalHash);
-    if (!target || !currentSection.contains(target)) return;
+  function scrollToTarget(hash) {
+    if (!hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      return;
+    }
+    const target = document.getElementById(hash);
+    if (!target || !currentSection.contains(target)) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      return;
+    }
     requestAnimationFrame(() => requestAnimationFrame(() => {
       target.scrollIntoView({ block: "start", behavior: "auto" });
       setActiveToc(target.id);
     }));
+  }
+
+  // The Mermaid runtime (~3.5 MB) is only fetched when the page being shown
+  // actually contains diagrams; the URL travels on the app script tag so the
+  // build can still verify that the local runtime is referenced.
+  const MERMAID_RUNTIME_URL = document.currentScript?.dataset.mermaidSrc
+    || document.querySelector("script[data-mermaid-src]")?.dataset.mermaidSrc
+    || "./vendor/mermaid.min.js";
+  let mermaidRuntimePromise;
+  let mermaidInitialized = false;
+
+  function loadMermaidRuntime() {
+    if (window.mermaid) return Promise.resolve(window.mermaid);
+    if (!mermaidRuntimePromise) {
+      mermaidRuntimePromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = MERMAID_RUNTIME_URL;
+        script.async = true;
+        script.onload = () => resolve(window.mermaid);
+        script.onerror = () => {
+          mermaidRuntimePromise = undefined;
+          reject(new Error("Mermaid runtime failed to load"));
+        };
+        document.head.appendChild(script);
+      });
+    }
+    return mermaidRuntimePromise;
   }
 
   async function renderMermaidDiagrams() {
@@ -294,35 +254,44 @@
       const fallback = figure.querySelector(".mermaid-fallback");
       if (fallback) fallback.open = true;
     };
-    const runtime = window.mermaid;
+
+    let runtime;
+    try {
+      runtime = await loadMermaidRuntime();
+    } catch {
+      runtime = undefined;
+    }
     if (!runtime?.initialize || !runtime?.run) {
       figures.forEach((figure) => showFallback(figure, "图表运行时未加载，已保留源码。"));
       return;
     }
 
-    try {
-      runtime.initialize({
-        startOnLoad: false,
-        securityLevel: "strict",
-        theme: "base",
-        themeVariables: {
-          background: "#ffffff",
-          primaryColor: "#edf4ff",
-          primaryBorderColor: "#87aef3",
-          primaryTextColor: "#102036",
-          secondaryColor: "#edf9f4",
-          secondaryBorderColor: "#80c9a8",
-          tertiaryColor: "#f6f8fb",
-          lineColor: "#61758e",
-          textColor: "#102036",
-          fontFamily: 'Inter, system-ui, "PingFang SC", "Microsoft YaHei", sans-serif',
-        },
-        flowchart: { htmlLabels: false, useMaxWidth: true },
-        sequence: { useMaxWidth: true, wrap: true },
-      });
-    } catch {
-      figures.forEach((figure) => showFallback(figure, "图表初始化失败，已保留源码。"));
-      return;
+    if (!mermaidInitialized) {
+      try {
+        runtime.initialize({
+          startOnLoad: false,
+          securityLevel: "strict",
+          theme: "base",
+          themeVariables: {
+            background: "#ffffff",
+            primaryColor: "#edf4ff",
+            primaryBorderColor: "#87aef3",
+            primaryTextColor: "#102036",
+            secondaryColor: "#edf9f4",
+            secondaryBorderColor: "#80c9a8",
+            tertiaryColor: "#f6f8fb",
+            lineColor: "#61758e",
+            textColor: "#102036",
+            fontFamily: 'Inter, system-ui, "PingFang SC", "Microsoft YaHei", sans-serif',
+          },
+          flowchart: { htmlLabels: false, useMaxWidth: true },
+          sequence: { useMaxWidth: true, wrap: true },
+        });
+        mermaidInitialized = true;
+      } catch {
+        figures.forEach((figure) => showFallback(figure, "图表初始化失败，已保留源码。"));
+        return;
+      }
     }
 
     for (const figure of figures) {
@@ -342,6 +311,173 @@
       }
     }
   }
+
+  function renderPagination() {
+    if (!pagePagination) return;
+    const previous = PAGE_DEFS[currentIndex - 1];
+    const next = PAGE_DEFS[currentIndex + 1];
+    const previousLink = previous
+      ? `<a class="page-pagination-link previous" href="${pageUrl(previous)}"><span>上一页 · ${escapeHtml([previous.section, previous.subsection].filter(Boolean).join(" / "))}</span><strong>← ${escapeHtml(previous.title)}</strong></a>`
+      : '<span class="page-pagination-spacer" aria-hidden="true"></span>';
+    const nextLink = next
+      ? `<a class="page-pagination-link next" href="${pageUrl(next)}"><span>下一页 · ${escapeHtml([next.section, next.subsection].filter(Boolean).join(" / "))}</span><strong>${escapeHtml(next.title)} →</strong></a>`
+      : '<span class="page-pagination-spacer" aria-hidden="true"></span>';
+    pagePagination.innerHTML = `${previousLink}<span class="page-pagination-count">${currentIndex + 1} / ${PAGE_DEFS.length}</span>${nextLink}`;
+  }
+
+  async function writeClipboard(value) {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(value);
+      return;
+    }
+    const textarea = document.createElement("textarea");
+    textarea.value = value;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand("copy");
+    textarea.remove();
+    if (!copied) throw new Error("Clipboard write failed");
+  }
+
+  function initCodeBlocks(section) {
+    if (section.dataset.codeBlocksReady) return;
+    section.dataset.codeBlocksReady = "true";
+    section.querySelectorAll("pre").forEach((pre) => {
+      if (pre.closest(".mermaid-fallback") || pre.parentElement?.classList.contains("markdown-code-block")) return;
+      const wrapper = document.createElement("div");
+      wrapper.className = "markdown-code-block";
+      wrapper.dataset.language = pre.dataset.language || "代码";
+      pre.before(wrapper);
+      wrapper.appendChild(pre);
+      const button = document.createElement("button");
+      button.className = "markdown-copy-button";
+      button.type = "button";
+      button.setAttribute("aria-label", "复制代码");
+      button.setAttribute("aria-live", "polite");
+      button.textContent = "复制";
+      button.addEventListener("click", async () => {
+        try {
+          await writeClipboard(pre.textContent);
+          button.textContent = "已复制";
+        } catch {
+          button.textContent = "复制失败";
+        }
+        window.setTimeout(() => { button.textContent = "复制"; }, 1400);
+      });
+      wrapper.appendChild(button);
+    });
+  }
+
+  // Show a page without reloading the document: toggle the visible section,
+  // refresh chrome (title, breadcrumb, nav, pagination, TOC), update the URL,
+  // then render that section's diagrams on demand.
+  function activatePage(page, hash = "", { history = null, scroll = true } = {}) {
+    const section = document.getElementById(page.id);
+    if (!section) return;
+    currentPage = page;
+    currentIndex = PAGE_DEFS.indexOf(page);
+    currentSection = section;
+
+    document.title = `UEnv 文档 — ${page.title}`;
+    sections.forEach((candidate) => {
+      const isCurrent = candidate.id === page.id;
+      candidate.hidden = !isCurrent;
+      candidate.classList.toggle("is-current-page", isCurrent);
+    });
+
+    const sectionLanding = PAGE_DEFS.find((candidate) => candidate.section === page.section) || page;
+    if (breadcrumbSection) {
+      breadcrumbSection.textContent = page.section;
+      breadcrumbSection.href = pageUrl(sectionLanding);
+    }
+    if (breadcrumbSubsection && breadcrumbSubsectionSeparator) {
+      const hasSubsection = Boolean(page.subsection);
+      breadcrumbSubsection.hidden = !hasSubsection;
+      breadcrumbSubsectionSeparator.hidden = !hasSubsection;
+      breadcrumbSubsection.textContent = page.subsection;
+    }
+    if (breadcrumbCurrent) breadcrumbCurrent.textContent = page.title;
+
+    topnavLinks.forEach((link) => {
+      const isCurrent = link.dataset.section === page.section;
+      link.classList.toggle("active", isCurrent);
+      if (isCurrent) link.setAttribute("aria-current", "location");
+      else link.removeAttribute("aria-current");
+    });
+
+    activeSidebarLink = undefined;
+    sidebarLinks.forEach((link) => {
+      const isCurrent = pageFromLink(link)?.slug === page.slug;
+      link.classList.toggle("active", isCurrent);
+      if (isCurrent) {
+        activeSidebarLink = link;
+        link.setAttribute("aria-current", "page");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    });
+
+    document.querySelectorAll(".sidebar-section").forEach((details) => {
+      const containsCurrent = details.contains(activeSidebarLink);
+      details.open = containsCurrent;
+      details.classList.toggle("contains-current", containsCurrent);
+    });
+    document.querySelectorAll(".sidebar-subsection").forEach((details) => {
+      const containsCurrent = details.contains(activeSidebarLink);
+      details.open = containsCurrent;
+      details.classList.toggle("contains-current", containsCurrent);
+    });
+    requestAnimationFrame(() => activeSidebarLink?.scrollIntoView({ block: "center" }));
+
+    if (history === "push") window.history.pushState(null, "", pageUrl(page, hash));
+    else if (history === "replace") window.history.replaceState(null, "", pageUrl(page, hash));
+
+    renderPagination();
+    initCodeBlocks(section);
+    renderToc();
+    if (scroll) scrollToTarget(hash);
+    void renderMermaidDiagrams();
+  }
+
+  // Intercept in-app navigation (sidebar, top nav, pagination, breadcrumb and
+  // cross-page Markdown links) and turn it into client-side page switches.
+  // External links, other pathnames, new-tab clicks and downloads are left to
+  // the browser.
+  document.addEventListener("click", (event) => {
+    if (event.defaultPrevented || event.button !== 0
+      || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
+    if (!link || link.target || link.hasAttribute("download")) return;
+    let url;
+    try {
+      url = new URL(link.href, window.location.href);
+    } catch {
+      return;
+    }
+    if (url.origin !== window.location.origin || url.pathname !== window.location.pathname) return;
+    const page = resolveSlug(url.searchParams.get("page") || "overview");
+    if (!page) return;
+    event.preventDefault();
+    let hash = "";
+    try {
+      hash = decodeURIComponent(url.hash.slice(1));
+    } catch {
+      hash = url.hash.slice(1);
+    }
+    if (page === currentPage && !hash) return;
+    activatePage(page, hash, { history: "push" });
+  });
+
+  window.addEventListener("popstate", () => {
+    const slug = new URLSearchParams(window.location.search).get("page");
+    const hash = decodedHash();
+    const canonical = PAGE_ALIASES.has(hash) ? "" : hash;
+    const page = resolveSlug(slug || "") || pageContainingHash(hash) || pageBySlug.get("overview") || PAGE_DEFS[0];
+    activatePage(page, canonical);
+  });
 
   let sidebarReturnFocus;
 
@@ -374,48 +510,6 @@
   });
   sidebarBackdrop?.addEventListener("click", () => closeSidebar({ restoreFocus: true }));
   sidebarLinks.forEach((link) => link.addEventListener("click", () => closeSidebar()));
-
-  async function writeClipboard(value) {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(value);
-      return;
-    }
-    const textarea = document.createElement("textarea");
-    textarea.value = value;
-    textarea.setAttribute("readonly", "");
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
-    document.body.appendChild(textarea);
-    textarea.select();
-    const copied = document.execCommand("copy");
-    textarea.remove();
-    if (!copied) throw new Error("Clipboard write failed");
-  }
-
-  currentSection.querySelectorAll("pre").forEach((pre) => {
-    if (pre.closest(".mermaid-fallback") || pre.parentElement?.classList.contains("markdown-code-block")) return;
-    const wrapper = document.createElement("div");
-    wrapper.className = "markdown-code-block";
-    wrapper.dataset.language = pre.dataset.language || "代码";
-    pre.before(wrapper);
-    wrapper.appendChild(pre);
-    const button = document.createElement("button");
-    button.className = "markdown-copy-button";
-    button.type = "button";
-    button.setAttribute("aria-label", "复制代码");
-    button.setAttribute("aria-live", "polite");
-    button.textContent = "复制";
-    button.addEventListener("click", async () => {
-      try {
-        await writeClipboard(pre.textContent);
-        button.textContent = "已复制";
-      } catch {
-        button.textContent = "复制失败";
-      }
-      window.setTimeout(() => { button.textContent = "复制"; }, 1400);
-    });
-    wrapper.appendChild(button);
-  });
 
   function headingText(heading) {
     const level = Number(heading.tagName.slice(1));
@@ -569,7 +663,7 @@
   function openResult(slug, resultHash = "") {
     closeSearch({ restoreFocus: false });
     const page = pageBySlug.get(slug);
-    if (page) window.location.href = pageUrl(page, resultHash);
+    if (page) activatePage(page, resultHash, { history: "push" });
   }
 
   function trapDialogFocus(event) {
@@ -622,8 +716,19 @@
   const systemKey = document.querySelector(".system-key");
   if (systemKey && /Mac|iPhone|iPad/u.test(navigator.platform)) systemKey.textContent = "⌘";
 
-  renderPagination();
-  renderToc();
-  scrollToHash();
-  void renderMermaidDiagrams();
+  const initialParams = new URLSearchParams(window.location.search);
+  const requestedSlug = initialParams.get("page");
+  const normalizedSlug = PAGE_ALIASES.get(requestedSlug) || requestedSlug;
+  const initialHash = decodedHash();
+  const canonicalHash = PAGE_ALIASES.has(initialHash) ? "" : initialHash;
+  const hashPage = pageContainingHash(initialHash);
+  const initialPage = pageBySlug.get(normalizedSlug)
+    || hashPage
+    || pageBySlug.get("overview")
+    || PAGE_DEFS[0];
+
+  const aliasRedirected = (requestedSlug && normalizedSlug !== requestedSlug)
+    || (requestedSlug && !pageBySlug.has(normalizedSlug))
+    || (!requestedSlug && hashPage && hashPage.slug !== "overview");
+  activatePage(initialPage, canonicalHash, { history: aliasRedirected ? "replace" : null });
 }());

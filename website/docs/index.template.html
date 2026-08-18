@@ -99,7 +99,8 @@
     </div>
 
     <!-- DOCS:PAGE_DATA -->
-    <script src="./vendor/mermaid.min.js" defer></script>
-    <script src="./app.js" defer></script>
+    <!-- Mermaid runtime is loaded on demand by app.js (only for pages that
+         contain diagrams); keep the local path in data-mermaid-src. -->
+    <script src="./app.js" data-mermaid-src="./vendor/mermaid.min.js" defer></script>
   </body>
 </html>
