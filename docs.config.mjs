@@ -64,7 +64,7 @@ export const sections = Object.freeze([
   section("接入强化学习框架", {
     pages: [
       page("integration/README.md", "integration", "强化学习框架接入指南"),
-      page("integration/contract.md", "integration-contract", "强化学习 Bridge 接入契约"),
+      page("integration/contract.md", "integration-contract", "强化学习接入契约"),
       page("integration/verl.md", "integration-verl", "VeRL 强化学习接入"),
       page("integration/custom-framework.md", "integration-custom", "自定义强化学习框架接入"),
       page("integration/support-matrix.md", "support-matrix", "强化学习框架支持矩阵"),
