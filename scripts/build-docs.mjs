@@ -13,6 +13,10 @@ import config from "../docs.config.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, "..");
+const mermaidRuntimePath = path.resolve(
+  projectRoot,
+  "node_modules/mermaid/dist/mermaid.min.js",
+);
 
 function fail(message) {
   throw new Error(message);
@@ -79,12 +83,54 @@ async function fileExists(filename) {
 }
 
 function validateConfiguration() {
+  if (!Array.isArray(config.sections) || config.sections.length === 0) {
+    fail("docs.config.mjs must define at least one navigation section");
+  }
   if (!Array.isArray(config.documents) || config.documents.length === 0) {
     fail("docs.config.mjs must define at least one document");
   }
 
   const slugs = new Set();
   const files = new Set();
+  const sectionTitles = new Set();
+  const configuredDocuments = [];
+  for (const [sectionIndex, section] of config.sections.entries()) {
+    if (!section || typeof section.title !== "string" || !section.title.trim()) {
+      fail(`Navigation section ${sectionIndex + 1} must have a title`);
+    }
+    if (sectionTitles.has(section.title)) fail(`Duplicate navigation section: ${section.title}`);
+    if (!Array.isArray(section.subsections) || section.subsections.length === 0) {
+      fail(`Navigation section ${section.title} must contain at least one subsection`);
+    }
+    sectionTitles.add(section.title);
+    const subsectionTitles = new Set();
+    for (const [subsectionIndex, subsection] of section.subsections.entries()) {
+      if (!subsection || typeof subsection.title !== "string" || !subsection.title.trim()) {
+        fail(
+          `Navigation subsection ${section.title}/${subsectionIndex + 1} must have a title`,
+        );
+      }
+      if (subsectionTitles.has(subsection.title)) {
+        fail(`Duplicate navigation subsection in ${section.title}: ${subsection.title}`);
+      }
+      if (!Array.isArray(subsection.pages) || subsection.pages.length === 0) {
+        fail(`Navigation subsection ${section.title}/${subsection.title} must contain pages`);
+      }
+      subsectionTitles.add(subsection.title);
+      configuredDocuments.push(
+        ...subsection.pages.map((page) => ({
+          ...page,
+          section: section.title,
+          subsection: subsection.title,
+        })),
+      );
+    }
+  }
+
+  if (JSON.stringify(configuredDocuments) !== JSON.stringify(config.documents)) {
+    fail("config.documents must be the ordered section/subsection/page flattening");
+  }
+
   for (const [index, document] of config.documents.entries()) {
     if (!document || typeof document !== "object") {
       fail(`Document ${index + 1} must be an object`);
@@ -99,20 +145,24 @@ function validateConfiguration() {
     }
     if (slugs.has(document.slug)) fail(`Duplicate document slug: ${document.slug}`);
     if (files.has(document.file)) fail(`Duplicate document source: ${document.file}`);
+    if (!sectionTitles.has(document.section)) {
+      fail(`Document ${document.file} has an unknown navigation section: ${document.section}`);
+    }
+    if (typeof document.subsection !== "string" || !document.subsection.trim()) {
+      fail(`Document ${document.file} has an invalid navigation subsection`);
+    }
     slugs.add(document.slug);
     files.add(document.file);
   }
 
-  const completePageList = [
-    ...(config.staticPagesBefore || []),
-    ...config.documents.map((document) => ({
-      slug: document.slug,
-      id: document.slug,
-      title: document.title,
-      source: document.file,
-    })),
-    ...(config.staticPagesAfter || []),
-  ];
+  const completePageList = config.documents.map((document) => ({
+    slug: document.slug,
+    id: document.slug,
+    title: document.title,
+    section: document.section,
+    subsection: document.subsection,
+    source: document.file,
+  }));
   const completeSlugs = new Set();
   const completeIds = new Set();
   for (const page of completePageList) {
@@ -123,7 +173,23 @@ function validateConfiguration() {
     completeIds.add(page.id);
   }
 
+  for (const [alias, target] of Object.entries(config.aliases || {})) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(alias)) {
+      fail(`Page alias must be stable ASCII kebab-case: ${alias}`);
+    }
+    if (completeSlugs.has(alias)) fail(`Page alias conflicts with a page slug: ${alias}`);
+    if (!completeSlugs.has(target)) fail(`Page alias ${alias} points to unknown slug: ${target}`);
+  }
+
   return completePageList;
+}
+
+function visibleInlineText(inline) {
+  if (!inline) return "";
+  return (inline.children || [])
+    .filter((child) => child.type !== "html_inline")
+    .map((child) => child.type === "softbreak" ? " " : child.content)
+    .join("") || inline.content || "";
 }
 
 function createMarkdownRenderer() {
@@ -154,13 +220,11 @@ function createMarkdownRenderer() {
       if (token.type !== "heading_open") continue;
       const inline = state.tokens[index + 1];
       if (!inline || inline.type !== "inline") continue;
-      const visibleHeading = (inline.children || [])
-        .filter((child) => child.type !== "html_inline")
-        .map((child) => child.content)
-        .join("") || inline.content;
-      const id = slugger.slug(visibleHeading);
+      const visibleHeading = visibleInlineText(inline);
+      const localId = slugger.slug(visibleHeading);
+      const id = state.env.pageSlug ? `${state.env.pageSlug}--${localId}` : localId;
       token.attrSet("id", id);
-      headingIds.add(id);
+      headingIds.add(localId);
     }
     state.env.headingIds = headingIds;
   });
@@ -169,6 +233,12 @@ function createMarkdownRenderer() {
   md.renderer.rules.fence = (tokens, index, options, env, self) => {
     const token = tokens[index];
     const language = token.info.trim().split(/\s+/u)[0].toLowerCase();
+    if (language === "mermaid") {
+      const source = md.utils.escapeHtml(token.content.trimEnd());
+      return `<figure class="mermaid-figure">
+<div class="mermaid" data-mermaid-pending>${source}</div>
+</figure>\n`;
+    }
     let rendered = defaultFenceRenderer(tokens, index, options, env, self);
     rendered = rendered.includes('<code class="')
       ? rendered.replace('<code class="', '<code class="hljs ')
@@ -179,6 +249,11 @@ function createMarkdownRenderer() {
       `<pre class="code-block" data-language="${md.utils.escapeHtml(language)}">`,
     );
   };
+
+  md.renderer.rules.table_open = (tokens, index, options, env, self) =>
+    `<div class="table-scroll" tabindex="0">${self.renderToken(tokens, index, options)}`;
+  md.renderer.rules.table_close = (tokens, index, options, env, self) =>
+    `${self.renderToken(tokens, index, options)}</div>`;
 
   return md;
 }
@@ -321,6 +396,7 @@ async function rewriteAndValidateLinks(parsedDocuments, documentsByPath, sourceD
       if (href.startsWith("#")) {
         const fragment = decodeUrlPart(href.slice(1), `link ${href}`);
         assertHeadingTarget(sourceDocument, fragment, sourceDocument.file, href);
+        token.attrSet("href", `#${sourceDocument.slug}--${fragment}`);
         continue;
       }
 
@@ -349,7 +425,7 @@ async function rewriteAndValidateLinks(parsedDocuments, documentsByPath, sourceD
       assertHeadingTarget(targetDocument, fragment, sourceDocument.file, href);
       token.attrSet(
         "href",
-        `?page=${encodeURIComponent(targetDocument.slug)}${fragment ? `#${fragment}` : ""}`,
+        `?page=${encodeURIComponent(targetDocument.slug)}${fragment ? `#${targetDocument.slug}--${fragment}` : ""}`,
       );
     }
   }
@@ -367,28 +443,60 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;");
 }
 
-function renderPageData(pages) {
-  const serialized = JSON.stringify(pages, null, 2)
+function serializeForInlineScript(value) {
+  return JSON.stringify(value, null, 2)
     .replaceAll("<", "\\u003c")
     .replaceAll("\u2028", "\\u2028")
     .replaceAll("\u2029", "\\u2029");
-  return `<script>window.__UENV_DOC_PAGES__ = ${serialized};</script>`;
 }
 
-function renderSidebar(documents) {
-  return documents
-    .map(
-      (document) =>
-        `<a class="sidebar-link" href="?page=${encodeURIComponent(document.slug)}">${escapeHtml(document.title)}</a>`,
-    )
+function renderPageData(pages, aliases) {
+  return `<script>
+window.__UENV_DOC_PAGES__ = ${serializeForInlineScript(pages)};
+window.__UENV_DOC_ALIASES__ = ${serializeForInlineScript(aliases || {})};
+</script>`;
+}
+
+function renderSidebar(sections, documents) {
+  const documentsBySlug = new Map(documents.map((document) => [document.slug, document]));
+  return sections
+    .map((section, sectionIndex) => {
+      const subsections = section.subsections.map((subsection) => {
+        const links = subsection.pages.map((page) => {
+          const document = documentsBySlug.get(page.slug);
+          if (!document) fail(`Navigation references an unread document: ${page.slug}`);
+          return `<a class="sidebar-link" href="?page=${encodeURIComponent(document.slug)}">${escapeHtml(document.title)}</a>`;
+        });
+        return `<div class="sidebar-subsection">
+    <p class="sidebar-subsection-label">${escapeHtml(subsection.title)}</p>
+    ${links.join("\n    ")}
+  </div>`;
+      });
+      return `<details class="sidebar-section" data-section="${escapeHtml(section.title)}"${sectionIndex === 0 ? " open" : ""}>
+  <summary class="sidebar-label"><span>${escapeHtml(section.title)}</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 8 3 3 3-3"></path></svg></summary>
+  <div class="sidebar-section-content">
+  ${subsections.join("\n  ")}
+  </div>
+</details>`;
+    })
     .join("\n");
+}
+
+function renderTopnav(sections) {
+  return sections.map((section) => {
+    const firstPage = section.subsections[0]?.pages[0];
+    if (!firstPage) fail(`Navigation section has no first page: ${section.title}`);
+    return `<a class="topnav-link" data-section="${escapeHtml(section.title)}" href="?page=${encodeURIComponent(firstPage.slug)}">${escapeHtml(section.title)}</a>`;
+  }).join("\n          ");
 }
 
 function renderDocumentSections(documents, md) {
   return documents
-    .map((document) => {
+    .map((document, index) => {
       const renderedMarkdown = md.renderer.render(document.tokens, md.options, document.environment);
-      return `<section class="doc-section markdown-body" id="${escapeHtml(document.slug)}" data-title="${escapeHtml(document.title)}" data-source="${escapeHtml(document.file)}">
+      const initialState = index === 0 ? " is-current-page" : "";
+      const hidden = index === 0 ? "" : " hidden";
+      return `<section class="doc-section markdown-body${initialState}" id="${escapeHtml(document.slug)}" data-title="${escapeHtml(document.title)}" data-source="${escapeHtml(document.file)}"${hidden}>
 ${renderedMarkdown.trimEnd()}
 </section>`;
     })
@@ -413,6 +521,9 @@ function injectTemplate(template, replacements) {
 }
 
 function validateRenderedPage(renderedPage, pages) {
+  if (/data-language="mermaid"|language-mermaid/iu.test(renderedPage)) {
+    fail("Mermaid fences must render as diagrams, not highlighted code blocks");
+  }
   const allIds = new Map();
   for (const match of renderedPage.matchAll(/\sid="([^"]+)"/gu)) {
     const id = match[1];
@@ -463,16 +574,28 @@ async function readDocuments(sourceDirectory, md) {
 
   for (const definition of config.documents) {
     const absolutePath = path.resolve(sourceDirectory, definition.file);
+    const relativePath = path.relative(sourceDirectory, absolutePath);
+    if (!relativePath || relativePath.startsWith(`..${path.sep}`) || path.isAbsolute(relativePath)) {
+      fail(`Document source must stay inside the documentation directory: ${definition.file}`);
+    }
     if (!(await fileExists(absolutePath))) {
       missingFiles.push(definition.file);
       continue;
     }
     const markdown = await readFile(absolutePath, "utf8");
-    const environment = { source: definition.file };
+    const environment = { source: definition.file, pageSlug: definition.slug };
     const tokens = md.parse(markdown, environment);
-    const firstHeading = tokens.find((token) => token.type === "heading_open");
-    if (!firstHeading || firstHeading.tag !== "h1") {
+    const firstHeadingIndex = tokens.findIndex((token) => token.type === "heading_open");
+    const firstHeading = tokens[firstHeadingIndex];
+    if (firstHeadingIndex !== 0 || !firstHeading || firstHeading.tag !== "h1") {
       fail(`${definition.file} must start with an H1 heading`);
+    }
+    const sourceTitle = visibleInlineText(tokens[firstHeadingIndex + 1]).trim();
+    if (sourceTitle !== definition.title) {
+      fail(
+        `${definition.file} navigation title must equal its H1: ` +
+          `configured "${definition.title}", source "${sourceTitle}"`,
+      );
     }
     documents.push({
       ...definition,
@@ -495,6 +618,9 @@ async function main() {
   const sourceDirectory = resolveFromProject(options.sourceDirectory);
   const outputDirectory = resolveFromProject(options.outputDirectory);
   const websiteDirectory = path.resolve(projectRoot, "website");
+  if (!(await fileExists(mermaidRuntimePath))) {
+    fail("Local Mermaid runtime is missing; run npm ci before checking or building docs");
+  }
   const completePageList = validateConfiguration();
   const md = createMarkdownRenderer();
   const parsedDocuments = await readDocuments(sourceDirectory, md);
@@ -511,8 +637,9 @@ async function main() {
   const templatePath = await selectTemplate(options.template, options.check);
   const template = await readFile(templatePath, "utf8");
   const renderedPage = injectTemplate(template, {
-    PAGE_DATA: renderPageData(completePageList),
-    SIDEBAR: renderSidebar(parsedDocuments),
+    PAGE_DATA: renderPageData(completePageList, config.aliases),
+    TOPNAV: renderTopnav(config.sections),
+    SIDEBAR: renderSidebar(config.sections, parsedDocuments),
     CONTENT: renderDocumentSections(parsedDocuments, md),
   });
 
@@ -551,6 +678,7 @@ async function main() {
   });
   const outputDocsDirectory = path.join(outputDirectory, "docs");
   await mkdir(outputDocsDirectory, { recursive: true });
+  await cp(mermaidRuntimePath, path.join(outputDocsDirectory, "mermaid.min.js"));
   for (const asset of localAssets) {
     const assetOutputPath = path.join(outputDocsDirectory, asset.relativePath);
     if (await fileExists(assetOutputPath)) {

@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="UEnv 使用文档，包含部署、Hub、评测、训练、系统架构与协议参考"
+      content="UEnv 文档：了解系统，部署 Server 与 Worker，运行评测和训练任务，并接入强化学习框架。"
     />
-    <title>UEnv 使用文档 — 部署、评测与训练指南</title>
+    <title>UEnv 文档</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -15,35 +15,25 @@
 
     <header class="topbar">
       <div class="topbar-inner">
-        <button class="icon-button mobile-only" id="menuButton" type="button" aria-label="打开目录">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 7h16M4 12h16M4 17h16" />
-          </svg>
+        <button class="icon-button mobile-only" id="menuButton" type="button" aria-label="打开目录" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
         </button>
 
         <a class="brand" href="../" aria-label="返回 UEnv 系统首页">
-          <span class="brand-mark" aria-hidden="true">
-            <span></span><span></span><span></span>
-          </span>
+          <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
           <span class="brand-name">UEnv</span>
           <span class="brand-divider"></span>
-          <span class="brand-subtitle">使用文档</span>
+          <span class="brand-subtitle">文档</span>
         </a>
 
         <nav class="topnav" aria-label="主导航">
-          <a class="product-home-link" href="../">系统首页</a>
-          <a href="?page=basic-deployment">部署指南</a>
-          <a href="?page=architecture">系统架构</a>
-          <a href="?page=uenv-bridge">核心组件</a>
+          <!-- DOCS:TOPNAV -->
         </nav>
 
         <div class="top-actions">
           <button class="search-trigger" id="searchButton" type="button">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="11" cy="11" r="6.5"></circle>
-              <path d="m16 16 4 4"></path>
-            </svg>
-            <span>搜索使用文档</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
+            <span>搜索 UEnv 文档</span>
             <kbd>Ctrl K</kbd>
           </button>
         </div>
@@ -51,37 +41,13 @@
     </header>
 
     <div class="page-shell">
-      <aside class="sidebar" id="sidebar" aria-label="使用文档目录">
+      <aside class="sidebar" id="sidebar" aria-label="UEnv 文档目录">
         <div class="sidebar-inner">
           <a class="sidebar-product-link" href="../">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
             返回系统首页
           </a>
-          <div class="sidebar-section">
-            <p class="sidebar-label">开始</p>
-            <a class="sidebar-link active" href="./">
-              <span class="nav-dot"></span>概览
-            </a>
-          </div>
-
-          <div class="sidebar-section">
-            <p class="sidebar-label">使用指南</p>
-            <!-- DOCS:SIDEBAR -->
-          </div>
-
-          <div class="sidebar-section">
-            <p class="sidebar-label">系统架构</p>
-            <a class="sidebar-link" href="?page=architecture">架构总览</a>
-            <a class="sidebar-link" href="?page=data-flow">Episode 数据流</a>
-          </div>
-
-          <div class="sidebar-section">
-            <p class="sidebar-label">核心组件</p>
-            <a class="sidebar-link" href="?page=uenv-bridge">uenv-bridge</a>
-            <a class="sidebar-link" href="?page=uenv-server">uenv-server</a>
-            <a class="sidebar-link" href="?page=uenv-worker">uenv-worker</a>
-            <a class="sidebar-link" href="?page=uenv-hub">uenv-hub</a>
-          </div>
+          <!-- DOCS:SIDEBAR -->
         </div>
       </aside>
 
@@ -92,336 +58,41 @@
           <nav class="breadcrumbs page-breadcrumbs" aria-label="面包屑">
             <a href="../">UEnv 系统首页</a>
             <span>/</span>
-            <a href="./">使用文档</a>
+            <a href="./">UEnv 文档</a>
             <span>/</span>
-            <strong id="breadcrumbCurrent">概览</strong>
+            <span id="breadcrumbSection">了解 UEnv</span>
+            <span>/</span>
+            <span id="breadcrumbSubsection">概览</span>
+            <span>/</span>
+            <strong id="breadcrumbCurrent">UEnv 文档</strong>
           </nav>
 
-          <section class="doc-section hero-section is-current-page" id="overview" data-title="概览">
-            <h1>统一环境接口，<br />让训练专注于训练。</h1>
-            <p class="hero-copy">
-              UEnv 为 LLM 后训练提供统一的环境执行接口。当前已接入 VeRL，整体架构可以继续适配其他训练框架。
-            </p>
-            <div class="hero-actions">
-              <a class="button primary" href="?page=basic-deployment">
-                开始部署
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
-              </a>
-              <a class="button secondary" href="?page=architecture">查看系统架构</a>
-            </div>
-
-            <div class="feature-grid">
-              <div class="feature-card">
-                <div class="feature-icon cyan">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 4v6M17 14v6M4 17h16" /></svg>
-                </div>
-                <h3>框架解耦</h3>
-                <p>当前通过 Bridge 对接 VeRL，训练侧不需要了解 Worker 和环境插件的内部实现。</p>
-              </div>
-              <div class="feature-card">
-                <div class="feature-icon green">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" /><path d="m4 7.5 8 4.5 8-4.5M12 12v9" /></svg>
-                </div>
-                <h3>分布式执行</h3>
-                <p>Server 统一调度，Worker Pool 主动执行 Episode，并支持环境预热与容量扩展。</p>
-              </div>
-              <div class="feature-card">
-                <div class="feature-icon violet">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V8m5 10V4m6 14v-7m5 7V6" /></svg>
-                </div>
-                <h3>可观测可靠</h3>
-                <p>记录组件注册、心跳、任务状态和执行结果，便于查询问题并恢复部分运行状态。</p>
-              </div>
-            </div>
-
-            <div class="overview-why" id="why-uenv">
-              <h2>为什么使用 UEnv</h2>
-              <p class="lead">
-                后训练系统同时面对多种训练框架、环境类型和执行资源。UEnv 把这些差异收敛到清晰的组件边界，让算法工程师与平台工程师各自关注自己的问题。
-              </p>
-              <div class="role-grid">
-                <div class="role-card">
-                  <span class="role-index">A</span>
-                  <h3>算法与训练团队</h3>
-                  <p>使用统一 Episode 接口接入环境，把精力放在采样策略、奖励设计和训练效果上。</p>
-                </div>
-                <div class="role-card">
-                  <span class="role-index">B</span>
-                  <h3>平台与环境团队</h3>
-                  <p>独立维护调度、Worker、环境插件与制品注册，无需侵入上层训练框架。</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="docs-map">
-              <h2>使用文档结构</h2>
-              <p>内容按“先运行、再理解、最后深入组件”的顺序组织，共四个部分。</p>
-              <div class="docs-map-grid">
-                <a href="./"><strong>开始</strong><span>概览与使用价值</span></a>
-                <a href="?page=basic-deployment"><strong>使用指南</strong><span>部署、Hub、评测与训练</span></a>
-                <a href="?page=architecture"><strong>系统架构</strong><span>总体架构、接口协议与数据流</span></a>
-                <a href="?page=uenv-bridge"><strong>核心组件</strong><span>Bridge、Server、Worker、Hub</span></a>
-              </div>
-            </div>
-          </section>
+          <details class="inline-toc" id="inlineToc">
+            <summary>本页目录</summary>
+            <nav id="inlineTocNav" aria-label="本页标题目录"></nav>
+          </details>
 
           <!-- DOCS:CONTENT -->
 
-          <section class="doc-section architecture-section" id="architecture" data-title="架构总览">
-            <h2>系统架构总览</h2>
-            <p class="lead">UEnv 把训练框架接入、任务调度、环境执行和环境管理分成独立组件。当前训练框架接入实现为 VeRL。</p>
-            <div class="architecture-board docs-architecture-board">
-              <div class="architecture-flow">
-                <article class="architecture-node">
-                  <div class="architecture-logo">T</div>
-                  <h3>VeRL</h3>
-                  <p>当前已接入的训练框架</p>
-                  <ul><li>提交 rollout 样本</li><li>接收奖励与轨迹</li></ul>
-                </article>
-                <div class="architecture-link link-blue"><span>Python 调用</span><i></i></div>
-                <article class="architecture-node is-highlighted">
-                  <div class="architecture-logo">B</div>
-                  <h3>uenv-bridge</h3>
-                  <p>训练框架适配层</p>
-                  <ul><li>转换请求和结果</li><li>通过 gRPC 调用 Adapter Core</li></ul>
-                </article>
-                <div class="architecture-link link-blue"><span>gRPC</span><i></i></div>
-                <article class="architecture-node">
-                  <div class="architecture-logo">S</div>
-                  <h3>Adapter Core / Server</h3>
-                  <p>网络入口与调度控制</p>
-                  <ul><li>Adapter Core 是运行进程</li><li>uenv-server 是进程内 Rust 库</li></ul>
-                </article>
-                <div class="architecture-link link-blue"><span>任务分发</span><i></i></div>
-                <article class="architecture-node is-highlighted">
-                  <div class="architecture-logo">W</div>
-                  <h3>uenv-worker</h3>
-                  <p>环境执行层</p>
-                  <ul><li>运行环境实例</li><li>调用模型并回报结果</li></ul>
-                </article>
-                <div class="architecture-link link-green"><span>按需 HTTP</span><i></i></div>
-                <article class="architecture-node">
-                  <div class="architecture-logo">H</div>
-                  <h3>uenv-hub</h3>
-                  <p>环境元数据与制品管理</p>
-                  <ul><li>管理环境版本和 Manifest</li><li>Worker 需要时查询或下载</li></ul>
-                </article>
-              </div>
-            </div>
-
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>两个容易混淆的边界</strong><span>Bridge 的 gRPC 请求先到 Adapter Core，再由 Adapter Core 调用进程内的 Server 模块。Hub 不是每次 Episode 的必经步骤，Worker 只在需要解析或同步环境包时访问 Hub。</span></div>
-            </div>
-
-            <h3>组件之间如何通信</h3>
-            <div class="config-table-wrap protocol-table-wrap">
-              <table class="config-table">
-                <thead><tr><th>通信方向</th><th>方式</th><th>传递内容</th></tr></thead>
-                <tbody>
-                  <tr><td>Bridge → Adapter Core</td><td>gRPC</td><td>训练样本和执行结果</td></tr>
-                  <tr><td>Adapter Core → Server</td><td>进程内函数调用</td><td>Episode 请求和结果</td></tr>
-                  <tr><td>Server ↔ Worker / Agent</td><td>gRPC</td><td>注册、心跳、任务分发和结果回报</td></tr>
-                  <tr><td>Worker → Hub</td><td>HTTP，按需调用</td><td>环境版本、Manifest 和制品</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section class="doc-section component-detail" id="uenv-bridge" data-title="uenv-bridge">
-            <div class="component-heading"><span class="component-tag">PY</span><div><h2>uenv-bridge</h2><p>训练框架适配层</p></div></div>
-            <p class="lead">uenv-bridge 当前面向 VeRL，把 VeRL 的 rollout 样本转换为 UEnv 请求，并把执行结果转换回 VeRL 可继续训练的数据。</p>
-
-            <h3>主要职责</h3>
-            <div class="detail-grid">
-              <div class="detail-card"><strong>接入 VeRL</strong><p>在 VeRL 的 AgentLoop 阶段接收 prompt、采样参数和环境配置。</p></div>
-              <div class="detail-card"><strong>统一数据格式</strong><p>把训练侧数据转换成 UEnv 的 Episode 请求，避免训练框架直接依赖 Server 和 Worker 的内部结构。</p></div>
-              <div class="detail-card"><strong>回填训练结果</strong><p>把响应、奖励、轨迹和结束原因整理成 VeRL 能继续使用的结果。</p></div>
-            </div>
-
-            <h3>一次请求如何经过 Bridge</h3>
-            <div class="steps compact-steps">
-              <div class="step"><span>1</span><div><h3>接收样本</h3><p>VeRL 将当前 rollout 样本交给 UEnv AgentLoop。</p></div></div>
-              <div class="step"><span>2</span><div><h3>生成请求</h3><p>Bridge 整理 prompt、模型地址、采样参数和环境配置。</p></div></div>
-              <div class="step"><span>3</span><div><h3>调用 Adapter Core</h3><p>Bridge 通过本地 gRPC 发送请求。Adapter Core 再调用进程内的 Server 模块。</p></div></div>
-              <div class="step"><span>4</span><div><h3>返回 VeRL</h3><p>Bridge 收到 Episode 结果后，恢复成 VeRL 需要的数据结构。</p></div></div>
-            </div>
-
-            <div class="boundary-note"><strong>当前支持范围</strong><span>当前 Bridge 只维护 VeRL pre-rollout AgentLoop 路径。架构可以继续增加其他训练框架适配器，但页面不把尚未接入的框架列为现有能力。</span></div>
-          </section>
-
-          <section class="doc-section" id="data-flow" data-title="Episode 数据流">
-            <h2>Episode 数据流</h2>
-            <p class="lead">下面展示当前 VeRL 接入下的默认 Native Worker 路径。Adapter Core 是 gRPC 入口，Server 是它在进程内使用的调度模块。</p>
-            <div class="sequence-card">
-              <div class="sequence-labels"><span>Bridge</span><span>Adapter Core / Server</span><span>Worker</span><span>Plugin</span></div>
-              <div class="sequence-lanes">
-                <div class="sequence-line one"><i></i><b>Episode 请求</b></div>
-                <div class="sequence-line two"><i></i><b>任务分发</b></div>
-                <div class="sequence-line three"><i></i><b>reset / step / close</b></div>
-                <div class="sequence-line four reverse"><i></i><b>环境结果</b></div>
-                <div class="sequence-line five reverse"><i></i><b>结果回报</b></div>
-                <div class="sequence-line six reverse"><i></i><b>训练结果</b></div>
-              </div>
-            </div>
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>任务分发和最终结果回报是两个步骤</strong><span>Server 先把任务交给 Worker。Worker 完成后再单独回报最终结果，Server 会确认该结果属于当前任务，再返回给训练侧。</span></div>
-            </div>
-          </section>
-
-          <section class="doc-section component-detail" id="uenv-server" data-title="uenv-server">
-            <div class="component-heading"><span class="component-tag rust">RS</span><div><h2>uenv-server</h2><p>Episode 调度与运行状态管理</p></div></div>
-            <p class="lead">VeRL 先把训练样本交给 uenv-bridge。Bridge 将数据转换为 Episode，并通过 gRPC 发送给 Adapter Core。Adapter Core 是对外运行的服务进程，它在进程内调用 uenv-server 完成调度。uenv-server 负责控制并发、选择 Worker 或 Agent、跟踪任务状态并返回结果。</p>
-
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>uenv-server 不是单独启动的进程</strong><span><code>uenv-server</code> 是 Rust 库，由 <code>uenv-adapter-core</code> 在进程内创建和调用。对外监听 gRPC 端口的是 Adapter Core 进程。</span></div>
-            </div>
-
-            <h3>先认识四个概念</h3>
-            <div class="config-table-wrap protocol-table-wrap">
-              <table class="config-table">
-                <thead><tr><th>名称</th><th>含义</th></tr></thead>
-                <tbody>
-                  <tr><td><code>Episode</code></td><td>一次完整的环境执行任务，从收到请求开始，到完成、失败、取消或超时结束。</td></tr>
-                  <tr><td><code>Environment</code></td><td>接收操作并返回观测、奖励和结束状态的程序，例如数学问答环境或代码测试环境。</td></tr>
-                  <tr><td><code>Worker</code></td><td>运行环境实例的独立进程。它向 Server 报告自己支持的环境、资源和空闲容量。</td></tr>
-                  <tr><td><code>Agent</code></td><td>执行多步工具操作的外部程序，主要用于需要修改代码、运行测试等任务。</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <h3>主要职责</h3>
-            <div class="detail-grid">
-              <div class="detail-card"><strong>管理请求</strong><p>识别重复请求，限制同时执行的 Episode 数量，并处理取消和超时。</p></div>
-              <div class="detail-card"><strong>选择执行资源</strong><p>根据环境类型、资源、健康状态和空闲容量选择合适的 Worker；特殊任务也可以交给 Agent。</p></div>
-              <div class="detail-card"><strong>管理结果与状态</strong><p>确认结果来自正确的任务分发，保存任务终态，并把结果返回 Adapter Core。</p></div>
-            </div>
-
-            <h3>职责边界</h3>
-            <p>Server 负责调度、并发控制和状态管理；Worker 或 Agent 负责实际执行；Hub 负责环境版本和制品。Server 不直接执行环境的 <code>reset / step / close</code>。</p>
-
-            <h3>默认的 Native Worker 流程</h3>
-            <p>Native Worker 是普通环境任务的默认路径。一次请求按下面的顺序执行：</p>
-            <div class="steps compact-steps">
-              <div class="step"><span>1</span><div><h3>接收 Episode</h3><p>Adapter Core 将转换后的 Episode 请求交给 Server 模块。</p></div></div>
-              <div class="step"><span>2</span><div><h3>检查并排队</h3><p>Server 检查任务是否重复，并等待全局并发名额。等待超时或收到取消信号时，任务直接结束。</p></div></div>
-              <div class="step"><span>3</span><div><h3>选择 Worker</h3><p>Server 筛选支持该环境、资源足够、状态正常且仍有空闲容量的 Worker。</p></div></div>
-              <div class="step"><span>4</span><div><h3>执行环境</h3><p>Server 下发任务。Worker 准备环境实例，调用模型，执行环境步骤，并生成奖励与轨迹。</p></div></div>
-              <div class="step"><span>5</span><div><h3>返回结果</h3><p>Worker 单独回报最终结果。Server 完成校验和记录后，将结果返回 Adapter Core。</p></div></div>
-            </div>
-
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>示例</strong><span>VeRL 提交一条 GSM8K 数学样本。Bridge 将样本转换为 Episode，并发送给 Adapter Core。Server 控制并发，选择可用 Worker 并下发任务。Worker 调用当前策略模型生成答案，数学环境计算奖励并记录轨迹。Worker 将结果回报 Server，Server 校验并记录后再返回 VeRL，用于后续训练。</span></div>
-            </div>
-
-            <h3>Server 怎样选择 Worker</h3>
-            <p>Server 先过滤不合格的 Worker，再在合格 Worker 之间轮流选择。</p>
-            <div class="module-list">
-              <div><code>环境支持</code><span>Worker 必须支持请求指定的环境类型。</span></div>
-              <div><code>资源满足</code><span>CPU、内存、GPU 和环境包等条件必须满足请求。</span></div>
-              <div><code>仍有容量</code><span>Worker 当前执行中的任务数不能达到容量上限。</span></div>
-              <div><code>状态正常</code><span>停止接收新任务、心跳超时或状态异常的 Worker 不会被选择。</span></div>
-            </div>
-
-            <h3>异常、超时和重试</h3>
-            <div class="detail-grid">
-              <div class="detail-card"><strong>取消或超时</strong><p>任务停止继续执行，迟到的结果不会覆盖已经确定的终态。</p></div>
-              <div class="detail-card"><strong>临时通信问题</strong><p>连接中断、模型服务暂时不可用或暂时没有容量时，可以按配置重试。</p></div>
-              <div class="detail-card"><strong>环境执行失败</strong><p>确定性的环境失败通常直接返回，不会自动换一个 Worker 再执行一次。</p></div>
-            </div>
-
-            <h3>高级 Agent 路径</h3>
-            <p>普通任务使用 Native Worker。只有请求明确选择 Agent 模式时，Server 才会使用下面的高级路径。</p>
-            <div class="config-table-wrap protocol-table-wrap">
-              <table class="config-table">
-                <thead><tr><th>路径</th><th>适用任务</th><th>主要执行资源</th></tr></thead>
-                <tbody>
-                  <tr><td>Native Worker</td><td>普通问答、环境交互和评测任务</td><td>Worker 与环境插件</td></tr>
-                  <tr><td>SWE Agent</td><td>需要代码仓库和隔离运行环境的软件工程任务</td><td>Agent 与 Worker Runtime Gateway</td></tr>
-                  <tr><td>Code Agent</td><td>使用工具完成多步代码操作的任务</td><td>ToolEnv Agent</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <h3>状态是否会保存</h3>
-            <p>持久化是可配置能力。启用后，Server 会保存 Episode、任务分发和最终状态，并在 Adapter Core 进程重启后恢复可恢复的信息。关闭持久化时，这些运行状态只保存在内存中，进程退出后不会保留。</p>
-
-          </section>
-
-          <section class="doc-section component-detail" id="uenv-worker" data-title="uenv-worker">
-            <div class="component-heading"><span class="component-tag rust">RS</span><div><h2>uenv-worker</h2><p>环境执行与实例运行时</p></div></div>
-            <p class="lead">uenv-worker 连接 Server，接收已分配的 Episode，在本机准备环境实例、调用模型、执行环境步骤，并回报结果。</p>
-
-            <h3>主要职责</h3>
-            <div class="detail-grid">
-              <div class="detail-card"><strong>报告能力</strong><p>向 Server 注册支持的环境、资源、容量和网络地址，并持续发送心跳。</p></div>
-              <div class="detail-card"><strong>管理环境实例</strong><p>创建、预热、复用和回收环境实例，减少重复启动带来的等待。</p></div>
-              <div class="detail-card"><strong>执行并回报</strong><p>调用模型和环境插件，生成响应、奖励与轨迹，并把最终结果回报 Server。</p></div>
-            </div>
-
-            <h3>一次任务如何执行</h3>
-            <div class="steps compact-steps">
-              <div class="step"><span>1</span><div><h3>启动并注册</h3><p>Worker 加载配置，启动服务，并向 Server 报告自己的能力和容量。</p></div></div>
-              <div class="step"><span>2</span><div><h3>接收任务</h3><p>Worker 检查任务是否有效，并确认本机仍有可用容量。</p></div></div>
-              <div class="step"><span>3</span><div><h3>准备环境</h3><p>优先使用本机已预热或已同步的环境实例；缺少本地可用实例时按需创建。Hub 只用于环境元数据解析或读取已预同步 EnvPackage，不是 Episode 执行热路径。</p></div></div>
-              <div class="step"><span>4</span><div><h3>执行并回报</h3><p>Worker 完成模型生成和环境交互，再把最终结果回报 Server。</p></div></div>
-            </div>
-
-            <div class="boundary-note"><strong>职责边界</strong><span>Worker 执行 Server 已分配的任务，但不决定全局调度，也不负责维护环境版本的权威信息。</span></div>
-          </section>
-
-          <section class="doc-section component-detail" id="uenv-hub" data-title="uenv-hub">
-            <div class="component-heading"><span class="component-tag rust">RS</span><div><h2>uenv-hub</h2><p>环境元数据与制品管理</p></div></div>
-            <p class="lead">uenv-hub 保存环境、版本、Manifest 和环境包信息，为 Worker 提供查询与下载接口。</p>
-
-            <h3>主要职责</h3>
-            <div class="detail-grid">
-              <div class="detail-card"><strong>管理环境版本</strong><p>记录环境名称、版本、接口定义和发布状态。</p></div>
-              <div class="detail-card"><strong>管理环境包</strong><p>保存环境包及其校验信息，供 Worker 按需同步。</p></div>
-              <div class="detail-card"><strong>提供访问控制</strong><p>支持鉴权、权限、限流和审计等管理能力。</p></div>
-            </div>
-
-            <h3>Worker 什么时候访问 Hub</h3>
-            <div class="steps compact-steps">
-              <div class="step"><span>1</span><div><h3>解析环境引用</h3><p>Worker 根据请求中的环境包和版本信息查询 Hub。</p></div></div>
-              <div class="step"><span>2</span><div><h3>获取 Manifest</h3><p>Hub 返回环境定义、版本和需要同步的制品信息。</p></div></div>
-              <div class="step"><span>3</span><div><h3>使用本地包</h3><p>Worker 优先使用本地已同步或已激活的 EnvPackage；完整制品同步通常由 <code>uenv env sync</code> 在任务前完成。</p></div></div>
-            </div>
-
-            <div class="callout note">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-              <div><strong>Hub 不是每次 Episode 的必经步骤</strong><span>如果 Worker 已经具备所需环境和版本，就可以直接执行任务；只有需要解析或同步环境包时才访问 Hub。</span></div>
-            </div>
-
-            <div class="boundary-note"><strong>职责边界</strong><span>Hub 管理环境元数据和制品，不参与 Worker 选择、Episode 调度和训练结果返回。</span></div>
-          </section>
-
-          <nav class="page-pagination" id="pagePagination" aria-label="使用文档分页"></nav>
+          <nav class="page-pagination" id="pagePagination" aria-label="UEnv 文档分页"></nav>
         </article>
       </main>
 
       <aside class="toc" aria-label="本页目录">
         <p>本页内容</p>
         <nav id="tocNav" aria-label="本页标题目录"></nav>
-        <div class="toc-help">
-          <span>继续了解实现细节</span>
-          <a href="?page=uenv-bridge">查看核心组件 →</a>
-        </div>
       </aside>
     </div>
 
-    <div class="search-dialog" id="searchDialog" role="dialog" aria-modal="true" aria-label="搜索使用文档" hidden>
+    <div class="search-dialog" id="searchDialog" role="dialog" aria-modal="true" aria-label="搜索 UEnv 文档" hidden>
       <div class="search-panel">
         <div class="search-input-wrap">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
-          <input id="searchInput" type="search" aria-label="搜索使用文档" placeholder="搜索部署、评测、训练、架构或组件…" autocomplete="off" />
-          <kbd>ESC</kbd>
+          <input id="searchInput" type="search" role="combobox" aria-expanded="true" aria-controls="searchResults" aria-autocomplete="list" aria-label="搜索 UEnv 文档" placeholder="搜索部署、评测、训练、强化学习接入或参考…" autocomplete="off" />
+          <button class="search-close" id="searchCloseButton" type="button" aria-label="关闭搜索">关闭</button>
         </div>
-        <div class="search-results" id="searchResults"></div>
-        <p class="search-hint">输入关键词，按 Enter 打开第一条结果</p>
+        <div class="search-results" id="searchResults" role="listbox"></div>
+        <p class="search-hint">使用 ↑↓ 选择，按 Enter 打开，按 Esc 关闭</p>
       </div>
     </div>
 

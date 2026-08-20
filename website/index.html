@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="UEnv 是面向 LLM 后训练的分布式环境执行框架，通过 Bridge、Server、Worker 与 Hub 连接训练流程、环境执行和环境元数据管理。"
+      content="UEnv 是面向 LLM 后训练的分布式环境执行框架，训练框架将任务数据直接转换为标准数据包，由 UEnv Server、UEnv Worker 与 UEnv Hub 完成环境执行和环境元数据管理。"
     />
     <meta name="theme-color" content="#07111f" />
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
     <meta property="og:title" content="UEnv — Distributed Environment Runtime" />
     <meta
       property="og:description"
@@ -96,8 +97,7 @@
           <div class="topology">
             <div class="topology-grid" aria-hidden="true"></div>
             <div class="topology-connectors" aria-hidden="true">
-              <div class="topology-connector connector-training-bridge"><span></span></div>
-              <div class="topology-connector connector-bridge-server"><span></span></div>
+              <div class="topology-connector connector-training-server"><span></span></div>
               <div class="topology-connector connector-server-worker"><span></span></div>
               <div class="topology-connector connector-worker-hub"><span></span></div>
             </div>
@@ -109,14 +109,7 @@
               <div><strong>VeRL / ROLL / NexRL</strong></div>
             </article>
 
-            <article class="topology-node node-bridge is-active">
-              <div class="node-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7zM3 12h4M17 12h4M12 3v4M12 17v4"></path></svg>
-              </div>
-              <div><strong>uenv-bridge</strong></div>
-            </article>
-
-            <article class="topology-node node-server">
+            <article class="topology-node node-server is-active">
               <div class="node-icon">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="6" rx="1"></rect><rect x="4" y="14" width="16" height="6" rx="1"></rect><path d="M8 7h.01M8 17h.01"></path></svg>
               </div>
@@ -166,8 +159,8 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 4v6M17 4v6M6 14h12M9 11v6M15 11v6M8 20h8"></path></svg>
             </div>
             <h3>训练框架无关</h3>
-            <p>通过 Bridge 适配不同训练框架，将 Episode 请求转换为统一协议，避免环境逻辑与训练代码重复耦合。</p>
-            <div class="card-code"><span>bridge</span><code>EpisodeRequest → EpisodeResult</code></div>
+            <p>训练框架接管任务数据后，直接转换为 UEnv Server 接入的标准数据包，避免环境逻辑与训练代码重复耦合。</p>
+            <div class="card-code"><span>standard packets</span><code>EpisodeRequest → EpisodeResult</code></div>
           </article>
 
           <article class="feature-card reveal reveal-delay-1">
@@ -214,7 +207,7 @@
                 <h2>从训练请求到环境结果，路径清晰可控</h2>
             </div>
             <div class="section-heading-detail">
-              <p>uenv-bridge、uenv-server、uenv-worker 与 uenv-hub 连接训练请求、分布式执行和环境元数据管理。</p>
+              <p>训练框架将任务数据直接转换为标准数据包，uenv-server、uenv-worker 与 uenv-hub 完成调度分发、分布式执行和环境元数据管理。</p>
               <a class="text-link" href="./docs/?page=architecture">查看系统架构 <span>↗</span></a>
             </div>
           </div>
@@ -227,15 +220,8 @@
                 <p>ROLL · VeRL · NeMo-RL · NexRL</p>
                 <ul><li>生成 rollout 请求</li><li>消费环境执行结果</li></ul>
               </article>
-              <div class="architecture-link link-blue"><span>Python API</span><i></i></div>
+              <div class="architecture-link link-blue"><span>标准数据包</span><i></i></div>
               <article class="architecture-node is-highlighted">
-                <div class="architecture-logo">B</div>
-                <h3>uenv-bridge</h3>
-                <p>训练框架适配器</p>
-                <ul><li>请求 / 结果转换</li><li>嵌入训练进程</li></ul>
-              </article>
-              <div class="architecture-link link-blue"><span>L1 gRPC</span><i></i></div>
-              <article class="architecture-node">
                 <div class="architecture-logo">S</div>
                 <h3>uenv-server</h3>
                 <p>全栈调度控制面</p>
@@ -311,12 +297,12 @@
         <div class="section-shell section-block quickstart-grid">
           <div class="quickstart-copy reveal">
             <h2>启动 UEnv 核心服务</h2>
-            <p>从仓库根目录构建 Adapter Core 与 Worker，再启动独立的 uenv-hub，并让 Worker 连接当前控制面与环境注册中心。</p>
+            <p>使用发布包一键安装 UEnv Server 与 UEnv Worker，systemd 自动接管两个服务；再验证健康接口与 Worker 注册状态。</p>
             <div class="quickstart-points">
-              <span><i>01</i> 构建核心组件</span>
-              <span><i>02</i> 启动 Adapter Core</span>
-              <span><i>03</i> 启动 uenv-hub</span>
-              <span><i>04</i> 接入 uenv-worker</span>
+              <span><i>01</i> 准备发布包</span>
+              <span><i>02</i> 一键安装</span>
+              <span><i>03</i> 验证服务</span>
+              <span><i>04</i> 确认 Worker 注册</span>
             </div>
             <a class="text-link" href="./docs/?page=basic-deployment">查看完整部署指南 <span>↗</span></a>
           </div>
@@ -330,23 +316,26 @@
                 <span>复制</span>
               </button>
             </div>
-            <pre id="quickstartCode"><code><span class="comment"># Build core components from repository root</span>
-<span class="prompt">$</span> cargo build -p uenv-server -p uenv-worker -p uenv-adapter-core
-<span class="prompt">$</span> (cd uenv-hub &amp;&amp; cargo build)
+            <pre id="quickstartCode"><code><span class="comment"># 获取发布包后，进入安装文件目录</span>
+<span class="prompt">$</span> cd /home/uenv-install
 
-<span class="comment"># Terminal 1 — Adapter Core + control plane</span>
-<span class="prompt">$</span> UENV_ADDR=0.0.0.0:50051 \
-  UENV_CONFIG_PATH=config/server.yaml \
-  cargo run -p uenv-adapter-core
+<span class="comment"># 一键安装 UEnv Server 与 UEnv Worker（单机模式）</span>
+<span class="prompt">$</span> sudo bash install.sh \
+  --bundle ./uenv-linux-x86_64.tar.gz \
+  --profile single-node
 
-<span class="comment"># Terminal 2 — environment registry</span>
-<span class="prompt">$</span> (cd uenv-hub &amp;&amp; UENV_HUB_AUTH__REQUIRE_TOKEN=false cargo run -p uenv-hub-server)
+<span class="comment"># 验证两个服务已启动</span>
+<span class="prompt">$</span> sudo systemctl is-active \
+  uenv-adapter-core.service uenv-worker.service
 
-<span class="comment"># Terminal 3 — execution node, from repository root</span>
-<span class="prompt">$</span> UENV_SERVER_ENDPOINT=127.0.0.1:50051 \
-  UENV_HUB_ENDPOINT=http://127.0.0.1:8080 \
-  cargo run -p uenv-worker -- --config config/uenv-worker.yaml serve</code></pre>
-            <div class="terminal-status"><i></i><span>adapter core · hub · worker connected</span><em>ready</em></div>
+<span class="comment"># 健康检查：Server 管理面与 Worker</span>
+<span class="prompt">$</span> curl -fsS http://127.0.0.1:50052/health
+<span class="prompt">$</span> curl -fsS http://127.0.0.1:19090/health
+
+<span class="comment"># 确认 Worker 已注册并处于 ready</span>
+<span class="prompt">$</span> uenv status
+<span class="prompt">$</span> uenv workers</code></pre>
+            <div class="terminal-status"><i></i><span>server · worker connected</span><em>ready</em></div>
           </div>
         </div>
       </section>

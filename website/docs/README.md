@@ -1,7 +1,7 @@
 # UEnv 文档站开发说明
 
-文档站保留现有静态 HTML/CSS/JavaScript 外观，部署时将
-`uenv_pre_release/Docs/deployment` 中的 5 份 Markdown 编译进页面。
+文档站保留静态 HTML/CSS/JavaScript 实现，部署时将
+`uenv_pre_release/Docs/guide` 中的公开 Markdown 编译进页面。
 生成文件位于 `dist/`，不要手工编辑生成后的 HTML。
 
 ## 本地构建
@@ -27,24 +27,29 @@ python3 -m http.server 8080 --directory dist
 `UENV_DOCS_SOURCE_DIR` 或 `--source` 指定 Markdown 目录：
 
 ```bash
-UENV_DOCS_SOURCE_DIR=/path/to/Docs/deployment npm run build
+UENV_DOCS_SOURCE_DIR=/path/to/Docs/guide npm run build
 ```
 
 ## 文档配置
 
-`docs.config.mjs` 是页面顺序、标题、源文件名和公开 slug 的唯一配置源。
-公开 slug 应保持稳定；修改 Markdown 文件名后，同时更新该配置。
+`docs.config.mjs` 是 section → subsection → page 导航、页面顺序、标题、源文件名、
+旧地址映射和公开 slug 的唯一配置源。公开 slug 应保持稳定；修改 Markdown 文件名
+后，同时更新该配置。组件说明、部署步骤和案例正文只维护在 Markdown 中，不在
+HTML 模板中复制第二份。
 
 构建器会自动完成：
 
 - Markdown、GFM 表格和代码块转换
+- 使用站内 Mermaid runtime 安全渲染当前页面的流程图，并在失败时显示源码
 - GitHub 兼容标题锚点
 - 相对 `.md` 链接和跨页锚点重写
 - 本地图片、附件校验与复制
-- 代码高亮、侧栏和完整页面顺序生成
-- 缺失文件、断链、重复 slug、重复 HTML ID 校验
+- 代码高亮、分组侧栏、面包屑和完整页面顺序生成
+- 页面及标题级搜索入口生成
+- H1 与导航标题一致性校验
+- 缺失文件、断链、孤立导航项、重复 slug、无效旧地址和重复 HTML ID 校验
 
-Markdown 中的本地图片或附件必须位于 `Docs/deployment` 内。例如：
+Markdown 中的本地图片或附件必须位于 `Docs/guide` 内。例如：
 
 ```markdown
 ![部署拓扑](./assets/deployment-topology.png)
@@ -61,7 +66,7 @@ Markdown 中的本地图片或附件必须位于 `Docs/deployment` 内。例如�
 - `repository_dispatch: deployment-docs-updated`
 
 `uenv_pre_release/.github/workflows/notify-website-docs.yml` 会在
-`Docs/deployment/**` 变化时发送上述事件，并携带精确 commit SHA。
+`Docs/guide/**` 变化时发送上述事件，并携带精确 commit SHA。
 
 要启用跨仓库自动触发，请在 `uenv_pre_release` 的 Actions secrets 中增加：
 
