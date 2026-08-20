@@ -82,7 +82,7 @@ const navigation = [
       {
         title: "结果与轨迹",
         pages: [
-          { file: "3-运行任务/12-trajectory.md", slug: "trajectory", title: "轨迹采集指南" },
+          { file: "3-运行任务/12-trajectory.md", slug: "trajectory", title: "获取轨迹" },
         ],
       },
     ],
@@ -91,24 +91,10 @@ const navigation = [
     title: "接入强化学习框架",
     subsections: [
       {
-        title: "接口与实现",
+        title: "接入指南",
         pages: [
-          { file: "4-接入强化学习框架/01-integration.md", slug: "integration", title: "接入强化学习框架" },
-          { file: "4-接入强化学习框架/02-contract.md", slug: "bridge-contract", title: "接口与数据契约" },
-          { file: "4-接入强化学习框架/03-custom-framework.md", slug: "integration-custom", title: "自定义强化学习框架接入" },
-        ],
-      },
-      {
-        title: "生产化",
-        pages: [
-          { file: "4-接入强化学习框架/06-runtime-semantics.md", slug: "runtime-semantics", title: "生产运行语义" },
-        ],
-      },
-      {
-        title: "框架案例",
-        pages: [
-          { file: "4-接入强化学习框架/04-verl.md", slug: "integration-verl", title: "VeRL 强化学习接入" },
-          { file: "4-接入强化学习框架/05-support-matrix.md", slug: "support-matrix", title: "支持状态与接入验收" },
+          { file: "4-接入强化学习框架/01-custom-framework.md", slug: "integration-custom", title: "自定义强化学习框架接入" },
+          { file: "4-接入强化学习框架/02-verl.md", slug: "integration-verl", title: "以 VeRL 为例接入 UEnv" },
         ],
       },
     ],
@@ -173,16 +159,20 @@ export const aliases = Object.freeze({
   components: "architecture",
   protocol: "protocols",
   "data-flow": "episode-lifecycle",
-  "uenv-bridge": "integration",
+  integration: "integration-custom",
+  "bridge-contract": "integration-custom",
+  "runtime-semantics": "integration-custom",
+  "support-matrix": "integration-custom",
+  "uenv-bridge": "integration-custom",
   "uenv-adapter": "server",
   "uenv-server": "server",
   adapter: "server",
   "uenv-worker": "worker-registration",
   "uenv-hub": "hub",
-  "adapter-contract": "bridge-contract",
-  "integration-openhands": "integration",
+  "adapter-contract": "integration-custom",
+  "integration-openhands": "integration-custom",
   "case-trajectory-swe": "trajectory",
-  roadmap: "support-matrix",
+  roadmap: "integration-custom",
 });
 
 export default Object.freeze({
