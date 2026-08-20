@@ -91,18 +91,24 @@ const navigation = [
     title: "接入强化学习框架",
     subsections: [
       {
-        title: "接入流程",
+        title: "接口与实现",
         pages: [
-          { file: "4-接入强化学习框架/01-integration.md", slug: "integration", title: "强化学习框架接入指南" },
-          { file: "4-接入强化学习框架/02-contract.md", slug: "bridge-contract", title: "强化学习接入契约" },
+          { file: "4-接入强化学习框架/01-integration.md", slug: "integration", title: "接入强化学习框架" },
+          { file: "4-接入强化学习框架/02-contract.md", slug: "bridge-contract", title: "接口与数据契约" },
           { file: "4-接入强化学习框架/03-custom-framework.md", slug: "integration-custom", title: "自定义强化学习框架接入" },
         ],
       },
       {
-        title: "框架支持",
+        title: "生产化",
+        pages: [
+          { file: "4-接入强化学习框架/06-runtime-semantics.md", slug: "runtime-semantics", title: "生产运行语义" },
+        ],
+      },
+      {
+        title: "框架案例",
         pages: [
           { file: "4-接入强化学习框架/04-verl.md", slug: "integration-verl", title: "VeRL 强化学习接入" },
-          { file: "4-接入强化学习框架/05-support-matrix.md", slug: "support-matrix", title: "强化学习框架支持矩阵" },
+          { file: "4-接入强化学习框架/05-support-matrix.md", slug: "support-matrix", title: "支持状态与接入验收" },
         ],
       },
     ],
