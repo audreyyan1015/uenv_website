@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="UEnv 是面向 LLM 后训练的分布式环境执行框架，训练框架将任务数据直接转换为标准数据包，由 UEnv Server、UEnv Worker 与 UEnv Hub 完成环境执行和环境元数据管理。"
+      content="UEnv 是评测、后训练、轨迹采集一体化的分布式环境系统，训练或评测框架将任务数据直接转换为标准数据包，由 UEnv Server、UEnv Worker 与 UEnv Hub 完成环境执行和环境元数据管理。"
     />
     <meta name="theme-color" content="#07111f" />
     <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
@@ -65,11 +65,11 @@
 
         <div class="hero-copy reveal">
           <h1>
-            <span class="hero-line">为 LLM 后训练构建的</span>
+            <span class="hero-line">评测、后训练、轨迹采集一体化的</span>
             <span class="hero-line hero-accent">分布式环境执行层</span>
           </h1>
           <p class="hero-description">
-            UEnv 将训练框架与环境执行解耦，以统一接口连接训练集群、调度控制面、uenv-worker 与 uenv-hub，让大规模多步交互任务更易扩展、观测与复用。
+            UEnv 将框架与环境执行解耦，以统一接口连接训练集群、调度控制面、uenv-worker 与 uenv-hub，为评测、后训练与轨迹采集提供易扩展、可观测、可复用的环境底座。
           </p>
           <div class="hero-actions">
             <a class="button button-primary" href="https://github.com/audreyyan1015/uenv" target="_blank" rel="noreferrer">
@@ -137,20 +137,14 @@
             </div>
           </div>
         </div>
-
-        <div class="framework-strip reveal reveal-delay-2">
-          <div class="framework-list">
-            <span>VeRL</span><span>ROLL</span><span>NeMo-RL</span><span>NexRL</span><span>OpenRLHF</span><span>Custom Stack</span>
-          </div>
-        </div>
       </section>
 
       <section class="section-shell section-block" id="capabilities">
         <div class="section-heading reveal">
           <div>
-            <h2>一个统一执行层，连接完整后训练链路</h2>
+            <h2>一个统一执行层，覆盖评测、后训练与轨迹采集全链路</h2>
           </div>
-          <p>让训练框架专注优化，让环境系统专注可靠执行。UEnv 通过标准协议屏蔽底层运行差异。</p>
+          <p>让训练与评测框架专注算法，让环境系统专注可靠执行。UEnv 通过标准协议屏蔽底层运行差异。</p>
         </div>
 
         <div class="feature-grid">
@@ -251,45 +245,16 @@
           <div>
             <h2>把分布式运行状态变成一张可读的图</h2>
           </div>
-          <p>展示工作流阶段、Worker 层级、Episode 进度、事件与日志，快速定位卡点和失败分支。</p>
+          <p>Episode 全局进度、单条任务阶段步进、Worker 资源概览与列表，快速定位卡点和失败分支。</p>
         </div>
 
-        <div class="console-shell reveal">
-          <div class="console-topbar">
-            <div class="console-brand"><span class="brand-mark mini"><span></span><span></span><span></span></span> UEnv Console</div>
-            <div class="console-run"><i></i> run-7c2a91 · RUNNING</div>
-            <div class="console-controls"><span>Live</span><span class="console-stop">Stop run</span></div>
+        <div class="real-ui-frame reveal">
+          <div class="browser-bar">
+            <div class="window-dots"><span></span><span></span><span></span></div>
+            <div class="browser-url">http://uenv-server:8777/server</div>
+            
           </div>
-          <div class="console-body">
-            <div class="console-workflow">
-              <div class="pane-title"><span>WORKFLOW</span><small>7 stages</small></div>
-              <div class="workflow-canvas">
-                <div class="workflow-line"></div>
-                <div class="workflow-step done"><i>✓</i><div><strong>Sample ingestion</strong><span>VeRL → UEnv</span></div><em>1,280</em></div>
-                <div class="workflow-step done"><i>✓</i><div><strong>Task dispatch</strong><span>uenv-server</span></div><em>1,274</em></div>
-                <div class="workflow-step active"><i></i><div><strong>Worker pool</strong><span>8 workers · 2 retries</span></div><em>312</em></div>
-                <div class="workflow-step active"><i></i><div><strong>Environment rollout</strong><span>multi-step execution</span></div><em>287</em></div>
-                <div class="workflow-step pending"><i></i><div><strong>Reward aggregation</strong><span>waiting upstream</span></div><em>0</em></div>
-              </div>
-            </div>
-            <aside class="console-tree">
-              <div class="pane-title"><span>OBJECT TREE</span><small>live state</small></div>
-              <div class="tree-row depth-0 selected"><b>⌄</b><i class="tree-dot blue"></i><span>run · 7c2a91</span><em>active</em></div>
-              <div class="tree-row depth-1"><b>⌄</b><i class="tree-dot green"></i><span>worker-01</span><em>4 envs</em></div>
-              <div class="tree-row depth-2"><b>⌄</b><i class="tree-dot blue"></i><span>math-plugin #1</span><em>12 ep</em></div>
-              <div class="tree-row depth-3"><b></b><i class="tree-dot blue"></i><span>episode 9a3f</span><em>14 / 20</em></div>
-              <div class="tree-row depth-3"><b></b><i class="tree-dot green"></i><span>episode 9b01</span><em>done</em></div>
-              <div class="tree-row depth-1"><b>⌄</b><i class="tree-dot orange"></i><span>worker-04</span><em>retrying</em></div>
-              <div class="tree-row depth-2"><b></b><i class="tree-dot red"></i><span>episode 81f2</span><em>failed</em></div>
-              <div class="detail-card"><strong>episode 81f2</strong><p>Timeout at step 14 · retry 2/3</p><div><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
-            </aside>
-          </div>
-          <div class="console-bottom">
-            <div class="console-tabs"><span class="active">Logs</span><span>Metrics</span><span>Events</span><span>Snapshots</span></div>
-            <div class="log-line error"><time>13:42:11.812</time><b>ERROR</b><span>worker-04</span><p>episode 81f2 exceeded maximum retry count</p></div>
-            <div class="log-line"><time>13:42:10.044</time><b>INFO</b><span>worker-01</span><p>step 20 completed · latency=412ms</p></div>
-            <div class="log-line warn"><time>13:42:09.337</time><b>WARN</b><span>worker-07</span><p>heartbeat delayed by 4.2s · marked degraded</p></div>
-          </div>
+          <img src="./assets/uenv-console-real.png" alt="UEnv 真实可视化界面：Episode 全局进度、阶段步进与 Worker 运行状态" loading="lazy" />
         </div>
       </section>
 
@@ -343,7 +308,7 @@
       <section class="cta-section section-shell reveal">
         <div class="cta-grid" aria-hidden="true"></div>
         <div class="cta-copy">
-          <h2>让后训练系统更模块化、更可扩展。</h2>
+          <h2>让评测、后训练与轨迹采集更模块化、更可扩展。</h2>
           <p>从使用文档开始接入，或前往 GitHub 查看源码与当前实现进展。</p>
         </div>
         <div class="cta-actions">

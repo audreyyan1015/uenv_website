@@ -797,3 +797,52 @@ body *::after {
   .cta-copy h2 { font-size: 27px; }
 }
 .site-footer { font-size: 11px; }
+
+/* real UI screenshot frame (replaces mock console) */
+.real-ui-frame {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px -24px rgba(15, 23, 42, 0.18);
+}
+.real-ui-frame .browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+.real-ui-frame .window-dots { display: flex; gap: 6px; }
+.real-ui-frame .window-dots span {
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.real-ui-frame .window-dots span:nth-child(1) { background: #f87171; }
+.real-ui-frame .window-dots span:nth-child(2) { background: #fbbf24; }
+.real-ui-frame .window-dots span:nth-child(3) { background: #34d399; }
+.real-ui-frame .browser-url {
+  flex: 1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: #64748b;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 5px 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.real-ui-frame .browser-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+.real-ui-frame img { display: block; width: 100%; height: auto; }
+
