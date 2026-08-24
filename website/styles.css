@@ -154,6 +154,7 @@ html[data-theme="dark"] .sun-icon, html[data-theme="light"] .moon-icon { display
 .hero h1 { margin: 25px 0 24px; max-width: 620px; font-size: clamp(44px, 5.1vw, 68px); line-height: 1.09; letter-spacing: -.055em; font-weight: 770; }
 .hero-line { display: block; }
 .hero h1 .hero-accent { color: transparent; background: linear-gradient(98deg, var(--blue-bright) 0%, var(--cyan) 65%, var(--green) 100%); -webkit-background-clip: text; background-clip: text; }
+.hero h1 .hero-brand { font-size: 1.7em; letter-spacing: -.02em; line-height: 1.02; margin-bottom: 10px; color: transparent; background: linear-gradient(90deg, var(--blue) 0%, var(--cyan) 50%, var(--green) 100%); -webkit-background-clip: text; background-clip: text; }
 .hero-description { max-width: 570px; margin: 0; color: var(--text-soft); font-size: 16px; line-height: 1.9; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 35px; }
 .hero-actions .button { width: 142px; min-width: 142px; }
