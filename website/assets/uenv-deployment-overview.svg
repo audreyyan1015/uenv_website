@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="540" viewBox="0 0 1200 540" role="img" aria-labelledby="title desc">
+<title id="title">UEnv 系统架构</title><desc id="desc">Bridge 统一接入，Server 调度固定部署的 Worker，Hub 提供组件和数据。Worker 内部由 Runtime 编排环境、智能体、工具和评分。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#476985"/></marker></defs>
+<rect width="1200" height="540" rx="20" fill="#f6f8fc"/>
+<g font-family="Noto Sans CJK SC,Microsoft YaHei,sans-serif" fill="#17344b">
+<text x="36" y="52" font-size="30" font-weight="700">UEnv 系统架构</text>
+<text x="36" y="84" font-size="18">大模型后训练、评测、轨迹采集共用任务执行流程</text>
+<g stroke="#adc0d4" stroke-width="2" fill="#eaf2ff"><rect x="35" y="155" width="205" height="95" rx="14"/><rect x="290" y="155" width="205" height="95" rx="14"/><rect x="545" y="155" width="245" height="95" rx="14"/></g>
+<g font-size="23" font-weight="700" text-anchor="middle"><text x="137" y="194">用户 / 训练框架</text><text x="392" y="194">Bridge · 统一接入</text><text x="667" y="194">Server · 任务调度</text></g>
+<g font-size="17" text-anchor="middle"><text x="137" y="227">网页 / CLI / Python</text><text x="392" y="227">准备输入、提交、读取结果</text><text x="667" y="227">排队、资源预留、管理结果</text></g>
+<rect x="840" y="135" width="325" height="300" rx="16" fill="#e7f5f1" stroke="#82b3a7" stroke-width="2"/>
+<text x="1002" y="176" font-size="24" font-weight="700" text-anchor="middle">Worker 执行节点 × N</text>
+<text x="1002" y="208" font-size="18" text-anchor="middle">固定部署、注册与心跳、结果交付</text>
+<rect x="860" y="234" width="285" height="56" rx="10" fill="#fff" stroke="#82b3a7"/>
+<text x="1002" y="269" text-anchor="middle" font-size="21">Runtime · 单次任务编排</text>
+<g font-size="17" text-anchor="middle"><text x="1002" y="321">Environment / Agent / Tools</text><text x="1002" y="352">Scorer · 按任务规则评分</text><text x="1002" y="392">Backend: Process / Docker / Podman</text></g>
+<rect x="290" y="340" width="250" height="100" rx="14" fill="#fff" stroke="#adc0d4" stroke-width="2"/>
+<text x="415" y="381" font-size="23" font-weight="700" text-anchor="middle">Hub · 包与数据管理</text><text x="415" y="415" font-size="17" text-anchor="middle">准备样本、附件与组件</text>
+<rect x="590" y="340" width="200" height="100" rx="14" fill="#fff" stroke="#adc0d4" stroke-width="2"/>
+<text x="690" y="381" font-size="23" font-weight="700" text-anchor="middle">外部模型服务</text><text x="690" y="415" font-size="17" text-anchor="middle">响应模型生成请求</text>
+<text x="36" y="505" font-size="18">实线：任务执行与通信　　虚线：组件与数据准备</text>
+</g>
+<g fill="none" stroke="#476985" stroke-width="2" marker-start="url(#arrow)" marker-end="url(#arrow)"><path d="M242 203 H287"/><path d="M497 203 H542"/><path d="M792 203 H837"/><path d="M792 381 H837"/></g>
+<g fill="none" stroke="#476985" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arrow)"><path d="M392 339 V253"/><path d="M540 438 V466 H1002 V438"/></g>
+</svg>

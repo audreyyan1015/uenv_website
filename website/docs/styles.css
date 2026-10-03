@@ -398,6 +398,21 @@ kbd {
   font-size: .88em;
   white-space: break-spaces;
 }
+.markdown-body p.file-path {
+  margin: -6px 0 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.markdown-body p.file-path > code {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: inherit;
+  background: transparent;
+  font-size: inherit;
+  overflow-wrap: anywhere;
+}
 .markdown-code-block {
   position: relative;
   margin: 23px 0 28px;

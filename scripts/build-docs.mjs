@@ -209,6 +209,23 @@ function createMarkdownRenderer() {
     },
   });
 
+  // The handbook uses standalone named anchors for stable cross-page links.
+  // Accept only this narrow form; arbitrary raw HTML remains disabled.
+  md.block.ruler.before("paragraph", "uenv_anchor", (state, startLine, endLine, silent) => {
+    if (state.sCount[startLine] - state.blkIndent >= 4) return false;
+    const line = state.src.slice(state.bMarks[startLine] + state.tShift[startLine], state.eMarks[startLine]);
+    const match = line.match(/^<a id="([A-Za-z][A-Za-z0-9_-]*)"><\/a>\s*$/u);
+    if (!match) return false;
+    if (silent) return true;
+    const token = state.push("uenv_anchor", "a", 0);
+    token.content = match[1];
+    token.map = [startLine, startLine + 1];
+    state.line = startLine + 1;
+    return true;
+  });
+  md.renderer.rules.uenv_anchor = (tokens, index) =>
+    `<a id="${md.utils.escapeHtml(tokens[index].attrGet("id"))}"></a>\n`;
+
   // markdown-it enables fenced code blocks and GFM-style tables by default.
   // Assign heading IDs during token processing so links can be validated before
   // rendering and duplicate headings follow GitHub's suffix rules.
@@ -217,6 +234,12 @@ function createMarkdownRenderer() {
     const headingIds = new Set();
     for (let index = 0; index < state.tokens.length; index += 1) {
       const token = state.tokens[index];
+      if (token.type === "uenv_anchor") {
+        const id = state.env.pageSlug ? `${state.env.pageSlug}--${token.content}` : token.content;
+        token.attrSet("id", id);
+        headingIds.add(token.content);
+        continue;
+      }
       if (token.type !== "heading_open") continue;
       const inline = state.tokens[index + 1];
       if (!inline || inline.type !== "inline") continue;
@@ -228,6 +251,16 @@ function createMarkdownRenderer() {
     }
     state.env.headingIds = headingIds;
   });
+
+  // A standalone file label is supporting information below a section title.
+  md.renderer.rules.paragraph_open = (tokens, index, options, env, self) => {
+    const children = tokens[index + 1]?.children || [];
+    if (children.length === 2 && children[0].type === "text" &&
+        children[0].content.trim() === "文件：" && children[1].type === "code_inline") {
+      tokens[index].attrJoin("class", "file-path");
+    }
+    return self.renderToken(tokens, index, options);
+  };
 
   const defaultFenceRenderer = md.renderer.rules.fence;
   md.renderer.rules.fence = (tokens, index, options, env, self) => {
@@ -587,8 +620,8 @@ async function readDocuments(sourceDirectory, md) {
     const tokens = md.parse(markdown, environment);
     const firstHeadingIndex = tokens.findIndex((token) => token.type === "heading_open");
     const firstHeading = tokens[firstHeadingIndex];
-    if (firstHeadingIndex !== 0 || !firstHeading || firstHeading.tag !== "h1") {
-      fail(`${definition.file} must start with an H1 heading`);
+    if (firstHeadingIndex < 0 || !firstHeading || firstHeading.tag !== "h1") {
+      fail(`${definition.file} must have an H1 heading as its first heading`);
     }
     const sourceTitle = visibleInlineText(tokens[firstHeadingIndex + 1]).trim();
     if (sourceTitle !== definition.title) {

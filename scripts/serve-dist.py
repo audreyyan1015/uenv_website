@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import email.utils
 import gzip
+from functools import partial
 import http.server
 import io
 import os
@@ -118,9 +119,11 @@ def main():
     parser.add_argument("--bind", default="0.0.0.0")
     args = parser.parse_args()
 
-    os.chdir(args.directory)
-    server = http.server.ThreadingHTTPServer((args.bind, args.port), Handler)
-    print(f"serving {os.getcwd()} on {args.bind}:{args.port} at {time.ctime()}", flush=True)
+    directory = os.path.abspath(args.directory)
+    server = http.server.ThreadingHTTPServer(
+        (args.bind, args.port), partial(Handler, directory=directory)
+    )
+    print(f"serving {directory} on {args.bind}:{args.port} at {time.ctime()}", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

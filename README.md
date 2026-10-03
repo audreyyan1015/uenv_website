@@ -1,56 +1,28 @@
-# UEnv 网站与公开文档
+# UEnv 网站与用户手册
 
-本仓库包含 UEnv 产品首页和公开文档站。文档正文来自相邻
-`uenv_pre_release/Docs/guide` 目录，本站负责分组导航、链接校验、标题级搜索和静态构建。
+网站使用现有静态首页与 Markdown 文档构建器。正文默认读取 `/home/UEnv_用户手册`，包含用户指南、全部数据集示例说明和维护者说明。正文只在该目录维护，`docs.config.mjs` 定义导航、标题与旧地址映射。
 
-## 对外组件关系
+## 构建
 
-主链固定为：`评测程序 / 强化学习框架 → UEnv Bridge → UEnv Server → UEnv Worker`。
-UEnv Hub 是按需访问的环境包分发旁路，不参与每次 Episode 调度。
-
-Server 是用户部署和访问的中心服务，负责 Worker 注册、Episode 调度和状态管理。
-当前可执行文件和 systemd 服务仍使用 `uenv-adapter-core` 这个兼容代码名；公开界面
-和文档统一称为 UEnv Server。
-
-## 本地构建
-
-把两个仓库放在同一目录：
-
-```text
-workspace/
-├── uenv_pre_release/
-└── uenv_website/
-```
-
-然后执行：
+需要 Node.js 20 或以上版本。首次安装依赖运行 `npm ci`，更新正文后运行：
 
 ```bash
-cd uenv_website
-npm ci
 npm run check
+npm test
 npm run build
-python3 -m http.server 8080 --directory dist
 ```
 
-访问 `http://127.0.0.1:8080/`。两个仓库不相邻时，可显式指定文档目录：
+其他机器可使用 `UENV_DOCS_SOURCE_DIR=/path/to/handbook npm run build`。`--output dist-next` 可先构建到独立目录再切换。
+
+## 157 上的网页服务
+
+访问 `http://8.130.75.157:8000/docs/`。`uenv-handbook.service` 使用 `scripts/serve-dist.py` 提供 `dist/`，开机启动并在进程异常退出后自动重启。
 
 ```bash
-UENV_DOCS_SOURCE_DIR=/absolute/path/to/Docs/guide npm run build
+sudo systemctl status uenv-handbook
+sudo systemctl restart uenv-handbook
+sudo journalctl -u uenv-handbook -n 50 --no-pager
+sudo systemctl stop uenv-handbook
 ```
 
-## 目录
-
-| 路径 | 用途 |
-|---|---|
-| `website/index.html` | 产品首页 |
-| `website/docs/index.template.html` | 文档站外壳，不包含重复的组件正文 |
-| `website/docs/app.js` | 页面切换、折叠导航、目录、搜索和 Mermaid 渲染 |
-| `docs.config.mjs` | section / subsection / page 层级、公开 slug 和旧地址映射 |
-| `scripts/build-docs.mjs` | Markdown、Mermaid、链接、标题与构建校验 |
-| `dist/` | 构建产物，不作为正文真源 |
-
-更详细的维护说明见 [`website/docs/README.md`](./website/docs/README.md)。
-
-## License
-
-Apache-2.0
+此服务部署当前手册的构建结果；修改 Markdown 后需要重新构建。已替换 8000 端口的旧版文档进程，8080 留给 UEnv Hub。本次没有向 GitHub/Gitea 推送，也没有修改旧版 Pages 发布工作流；该工作流仍面向旧文档源，不能用于发布本版手册。

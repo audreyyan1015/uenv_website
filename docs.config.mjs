@@ -1,135 +1,175 @@
-/**
- * Public documentation navigation.
- *
- * The hierarchy is deliberately three levels deep:
- * user activity (section) -> topic (subsection) -> document (page).
- * Markdown H1 headings are the source of truth for page titles; the build
- * fails when a configured title and its H1 diverge.
- */
+// Navigation for the current UEnv handbook. Titles match Markdown H1 headings.
 const navigation = [
   {
-    title: "了解 UEnv",
-    subsections: [
+    "title": "认识 UEnv",
+    "subsections": [
       {
-        title: "概览",
-        pages: [
-          { file: "1-了解UEnv/01-index.md", slug: "overview", title: "UEnv 使用手册" },
-        ],
-      },
-      {
-        title: "核心概念",
-        pages: [
-          { file: "1-了解UEnv/02-architecture.md", slug: "architecture", title: "架构与组件" },
-          { file: "1-了解UEnv/03-episode-lifecycle.md", slug: "episode-lifecycle", title: "一次 Episode 如何完成" },
-        ],
-      },
-    ],
+        "title": "系统概览",
+        "pages": [
+          {
+            "file": "01-认识UEnv/1.1-UEnv的定位与使用场景.md",
+            "slug": "introduction",
+            "title": "UEnv 的定位与使用场景"
+          },
+          {
+            "file": "01-认识UEnv/1.2-系统组成与任务执行流程.md",
+            "slug": "architecture",
+            "title": "系统组成与任务执行流程"
+          }
+        ]
+      }
+    ]
   },
   {
-    title: "部署 UEnv",
-    subsections: [
+    "title": "安装部署",
+    "subsections": [
       {
-        title: "部署方式",
-        pages: [
-          { file: "2-部署UEnv/01-single-node.md", slug: "basic-deployment", title: "单机部署" },
-          { file: "2-部署UEnv/02-multi-node.md", slug: "multi-node-deployment", title: "多机部署" },
-        ],
-      },
-      {
-        title: "服务配置",
-        pages: [
-          { file: "2-部署UEnv/03-server.md", slug: "server", title: "配置 UEnv Server" },
-          { file: "2-部署UEnv/04-worker-registration.md", slug: "worker-registration", title: "配置并注册 UEnv Worker" },
-          { file: "2-部署UEnv/05-hub.md", slug: "hub", title: "部署和使用 UEnv Hub" },
-        ],
-      },
-    ],
+        "title": "部署方式",
+        "pages": [
+          {
+            "file": "02-安装部署与环境准备/2.1-安装与运行环境准备.md",
+            "slug": "preparation",
+            "title": "安装与运行环境准备"
+          },
+          {
+            "file": "02-安装部署与环境准备/2.2-单机部署.md",
+            "slug": "basic-deployment",
+            "title": "单机部署"
+          },
+          {
+            "file": "02-安装部署与环境准备/2.3-多机部署.md",
+            "slug": "multi-node-deployment",
+            "title": "多机部署"
+          },
+          {
+            "file": "02-安装部署与环境准备/2.5-部署配置.md",
+            "slug": "deployment-config",
+            "title": "部署配置"
+          }
+        ]
+      }
+    ]
   },
   {
-    title: "运行任务",
-    subsections: [
+    "title": "运行任务",
+    "subsections": [
       {
-        title: "任务概览",
-        pages: [
-          { file: "3-运行任务/01-usage.md", slug: "usage", title: "使用指南" },
-          { file: "3-运行任务/02-cases.md", slug: "cases", title: "案例库" },
-        ],
-      },
-      {
-        title: "评测",
-        pages: [
-          { file: "3-运行任务/03-evaluation.md", slug: "evaluation", title: "通用评测流程" },
-          { file: "3-运行任务/04-evaluation-gsm8k.md", slug: "case-eval-gsm8k", title: "数学问答" },
-          { file: "3-运行任务/05-evaluation-code.md", slug: "case-eval-code", title: "代码生成" },
-          { file: "3-运行任务/06-evaluation-swe-verified.md", slug: "case-eval-swe", title: "代码修复" },
-        ],
-      },
-      {
-        title: "强化学习训练",
-        pages: [
-          { file: "3-运行任务/07-post-training.md", slug: "training", title: "强化学习训练指南" },
-          { file: "3-运行任务/08-training-gsm8k-verl.md", slug: "case-train-gsm8k", title: "数学问答" },
-          { file: "3-运行任务/09-training-code-verl.md", slug: "case-train-code", title: "代码生成" },
-          { file: "3-运行任务/10-training-swe-smith-verl.md", slug: "case-train-swe", title: "代码修复" },
-        ],
-      },
-      {
-        title: "自定义环境",
-        pages: [
-          { file: "3-运行任务/11-process-plugin.md", slug: "custom-environment", title: "自定义环境" },
-        ],
-      },
-      {
-        title: "结果与轨迹",
-        pages: [
-          { file: "3-运行任务/12-trajectory.md", slug: "trajectory", title: "获取轨迹" },
-        ],
-      },
-    ],
+        "title": "配置与执行",
+        "pages": [
+          {
+            "file": "03-配置与运行任务/3.2-运行评测.md",
+            "slug": "evaluation",
+            "title": "运行评测"
+          },
+          {
+            "file": "03-配置与运行任务/3.3-以轨迹采集为目的运行任务.md",
+            "slug": "trajectory",
+            "title": "轨迹采集"
+          },
+          {
+            "file": "03-配置与运行任务/3.4-使用VeRL训练.md",
+            "slug": "training",
+            "title": "强化学习训练"
+          }
+        ]
+      }
+    ]
   },
   {
-    title: "接入强化学习框架",
-    subsections: [
+    "title": "扩展 UEnv",
+    "subsections": [
       {
-        title: "接入指南",
-        pages: [
-          { file: "4-接入强化学习框架/01-custom-framework.md", slug: "integration-custom", title: "自定义强化学习框架接入" },
-          { file: "4-接入强化学习框架/02-verl.md", slug: "integration-verl", title: "以 VeRL 为例接入 UEnv" },
-        ],
-      },
-    ],
+        "title": "开发与接入",
+        "pages": [
+          {
+            "file": "04-扩展UEnv/4.1-接入新的数据集.md",
+            "slug": "custom-dataset",
+            "title": "接入新的数据集"
+          },
+          {
+            "file": "04-扩展UEnv/4.2-定义新的智能体.md",
+            "slug": "custom-agent",
+            "title": "定义新的智能体"
+          },
+          {
+            "file": "04-扩展UEnv/4.3-定义新的工具.md",
+            "slug": "custom-tool",
+            "title": "定义新的工具"
+          },
+          {
+            "file": "04-扩展UEnv/4.4-接入新的训练框架.md",
+            "slug": "integration-custom",
+            "title": "接入新的训练框架"
+          }
+        ]
+      }
+    ]
   },
   {
-    title: "运维 UEnv",
-    subsections: [
+    "title": "完整示例",
+    "subsections": [
       {
-        title: "运维流程",
-        pages: [
-          { file: "5-运维UEnv/01-operations.md", slug: "operations", title: "运行维护" },
-          { file: "5-运维UEnv/02-troubleshooting.md", slug: "troubleshooting", title: "故障排查" },
-        ],
-      },
-    ],
-  },
-  {
-    title: "查阅参考",
-    subsections: [
-      {
-        title: "名称与配置",
-        pages: [
-          { file: "6-查阅参考/01-glossary.md", slug: "glossary", title: "术语表" },
-          { file: "6-查阅参考/02-configuration.md", slug: "configuration", title: "UEnv Server 与 UEnv Worker 配置参考" },
-        ],
+        "title": "示例入口",
+        "pages": [
+          {
+            "file": "examples/datasets/README.md",
+            "slug": "cases",
+            "title": "数据集示例"
+          }
+        ]
       },
       {
-        title: "网络与协议",
-        pages: [
-          { file: "6-查阅参考/03-ports.md", slug: "ports", title: "端口与连接方向" },
-          { file: "6-查阅参考/04-protocols.md", slug: "protocols", title: "协议与调用方向" },
-        ],
-      },
-    ],
-  },
+        "title": "数据集",
+        "pages": [
+          {
+            "file": "examples/datasets/gsm8k/README.md",
+            "slug": "dataset-gsm8k",
+            "title": "GSM8K 全量示例"
+          },
+          {
+            "file": "examples/datasets/pubmedqa/README.md",
+            "slug": "dataset-pubmedqa",
+            "title": "pubmedqa 全量示例"
+          },
+          {
+            "file": "examples/datasets/olymmath/README.md",
+            "slug": "dataset-olymmath",
+            "title": "olymmath 全量示例"
+          },
+          {
+            "file": "examples/datasets/scitab/README.md",
+            "slug": "dataset-scitab",
+            "title": "scitab 全量示例"
+          },
+          {
+            "file": "examples/datasets/dscodebench/README.md",
+            "slug": "dataset-dscodebench",
+            "title": "dscodebench 全量示例"
+          },
+          {
+            "file": "examples/datasets/swe_lite/README.md",
+            "slug": "dataset-swe-lite",
+            "title": "swe_lite 全量示例"
+          },
+          {
+            "file": "examples/datasets/swe_verified/README.md",
+            "slug": "dataset-swe-verified",
+            "title": "swe_verified 全量示例"
+          },
+          {
+            "file": "examples/datasets/swe_pro/README.md",
+            "slug": "dataset-swe-pro",
+            "title": "swe_pro 全量示例"
+          },
+          {
+            "file": "examples/datasets/swe_smith/README.md",
+            "slug": "dataset-swe-smith",
+            "title": "swe_smith 全量示例"
+          }
+        ]
+      }
+    ]
+  }
 ];
 
 export const sections = Object.freeze(navigation.map((section) => Object.freeze({
@@ -153,33 +193,54 @@ export const documents = Object.freeze(
 );
 
 export const aliases = Object.freeze({
+  "custom-environment": "custom-dataset",
+  "examples": "cases",
+  "usage": "evaluation",
+  "run-configuration": "evaluation",
   "quick-start": "basic-deployment",
-  workflow: "basic-deployment",
-  "why-uenv": "overview",
-  components: "architecture",
-  protocol: "protocols",
-  "data-flow": "episode-lifecycle",
-  integration: "integration-custom",
+  "workflow": "basic-deployment",
+  "overview": "introduction",
+  "why-uenv": "introduction",
+  "components": "architecture",
+  "episode-lifecycle": "architecture",
+  "data-flow": "architecture",
+  "integration": "integration-custom",
   "bridge-contract": "integration-custom",
   "runtime-semantics": "integration-custom",
   "support-matrix": "integration-custom",
   "uenv-bridge": "integration-custom",
-  "uenv-adapter": "server",
-  "uenv-server": "server",
-  adapter: "server",
-  "uenv-worker": "worker-registration",
-  "uenv-hub": "hub",
   "adapter-contract": "integration-custom",
   "integration-openhands": "integration-custom",
+  "roadmap": "integration-custom",
+  "integration-verl": "training",
+  "server": "basic-deployment",
+  "uenv-adapter": "basic-deployment",
+  "uenv-server": "basic-deployment",
+  "adapter": "basic-deployment",
+  "worker-registration": "multi-node-deployment",
+  "uenv-worker": "multi-node-deployment",
+  "hub": "basic-deployment",
+  "uenv-hub": "basic-deployment",
   "case-trajectory-swe": "trajectory",
-  roadmap: "integration-custom",
+  "case-eval-gsm8k": "dataset-gsm8k",
+  "case-train-gsm8k": "dataset-gsm8k",
+  "case-eval-code": "dataset-dscodebench",
+  "case-train-code": "dataset-dscodebench",
+  "case-eval-swe": "dataset-swe-verified",
+  "case-train-swe": "dataset-swe-smith",
+  "operations": "evaluation",
+  "troubleshooting": "evaluation",
+  "concepts": "architecture",
+  "glossary": "architecture",
+  "configuration": "evaluation",
+  "ports": "multi-node-deployment",
+  "protocols": "architecture",
+  "protocol": "architecture"
 });
 
 export default Object.freeze({
-  sourceDirectory: "../uenv_pre_release/Docs/guide",
+  sourceDirectory: "/home/UEnv_用户手册",
   template: "website/docs/index.template.html",
   outputDirectory: "dist",
-  sections,
-  documents,
-  aliases,
+  sections, documents, aliases,
 });

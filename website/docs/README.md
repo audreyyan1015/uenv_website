@@ -1,7 +1,7 @@
 # UEnv 文档站开发说明
 
 文档站保留静态 HTML/CSS/JavaScript 实现，部署时将
-`uenv_pre_release/Docs/guide` 中的公开 Markdown 编译进页面。
+`/home/UEnv_用户手册` 中的公开 Markdown 编译进页面。
 生成文件位于 `dist/`，不要手工编辑生成后的 HTML。
 
 ## 本地构建
@@ -49,14 +49,16 @@ HTML 模板中复制第二份。
 - H1 与导航标题一致性校验
 - 缺失文件、断链、孤立导航项、重复 slug、无效旧地址和重复 HTML ID 校验
 
-Markdown 中的本地图片或附件必须位于 `Docs/guide` 内。例如：
+Markdown 中的本地图片或附件必须位于 手册源目录 内。例如：
 
 ```markdown
 ![部署拓扑](./assets/deployment-topology.png)
 [下载示例配置](./assets/example.yaml)
 ```
 
-## 自动发布
+## 旧版自动发布（不适用于当前手册）
+
+以下工作流仍绑定旧文档仓库，本次 157 部署不使用这些工作流。当前手册通过仓库根目录 README 中的本机构建方式更新。
 
 `uenv_website/.github/workflows/deploy-pages.yml` 会检出两个仓库、构建
 `dist/` 并发布到 GitHub Pages。它支持：
