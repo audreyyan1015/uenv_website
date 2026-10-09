@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import config from '../docs.config.mjs';
 
 test('handbook anchors, navigation before title, and validation failures', async () => {
@@ -30,6 +31,16 @@ test('handbook anchors, navigation before title, and validation failures', async
     let result = build(false);
     assert.equal(result.status, 0, result.stderr);
     const html = await readFile(path.join(output, 'docs/index.html'), 'utf8');
+    const info = JSON.parse(await readFile(path.join(output, 'docs/build-info.json'), 'utf8'));
+    assert.equal(info.source_directory, source);
+    assert.equal(info.source_revision, null);
+    assert.equal(info.source_dirty, null);
+    assert.equal(info.inputs.length, config.documents.length);
+    assert.equal(info.rendered_sha256, createHash('sha256').update(html).digest('hex'));
+    assert.equal(info.inputs.find(input => input.path === first.file).sha256,
+      createHash('sha256').update(valid).digest('hex'));
+    assert.equal(info.content_sha256, createHash('sha256').update(JSON.stringify(info.inputs)).digest('hex'));
+    assert.ok(Number.isFinite(Date.parse(info.generated_at)));
     assert.ok(html.includes(`id="${first.slug}--intro"`));
     assert.ok(html.includes(`?page=${second.slug}#${second.slug}--chapter-test`));
     assert.ok(!html.includes('<script>alert(1)</script>'));

@@ -169,7 +169,47 @@ const navigation = [
         ]
       }
     ]
-  }
+  },
+{
+  "title": "维护者说明",
+  "subsections": [
+    {
+      "title": "源码、部署与验收",
+      "pages": [
+        {
+          "file": "维护者说明/仓库修改说明.md",
+          "slug": "maintenance-source",
+          "title": "仓库修改说明"
+        },
+        {
+          "file": "维护者说明/真实部署验收.md",
+          "slug": "maintenance-live-acceptance",
+          "title": "真实部署与维护验收（2026-09-18）"
+        },
+        {
+          "file": "维护者说明/自定义部署与源码构建.md",
+          "slug": "maintenance-custom-build",
+          "title": "自定义部署与源码构建"
+        },
+        {
+          "file": "维护者说明/自动部署实现与验收.md",
+          "slug": "maintenance-installer",
+          "title": "安装部署实现与验收"
+        },
+        {
+          "file": "维护者说明/示例覆盖与验证.md",
+          "slug": "maintenance-examples",
+          "title": "示例覆盖与验证"
+        },
+        {
+          "file": "维护者说明/Registry迁移.md",
+          "slug": "maintenance-registry-migration",
+          "title": "Registry 分发切换"
+        }
+      ]
+    }
+  ]
+}
 ];
 
 export const sections = Object.freeze(navigation.map((section) => Object.freeze({
@@ -239,7 +279,7 @@ export const aliases = Object.freeze({
 });
 
 export default Object.freeze({
-  sourceDirectory: "/home/UEnv_用户手册",
+  sourceDirectory: "/data/yanziyi/src/uenv_refactor/docs/user",
   template: "website/docs/index.template.html",
   outputDirectory: "dist",
   sections, documents, aliases,

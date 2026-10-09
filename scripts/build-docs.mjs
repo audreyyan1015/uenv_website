@@ -3,6 +3,8 @@
 import { access, cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import GithubSlugger from "github-slugger";
@@ -686,6 +688,41 @@ async function main() {
     return;
   }
 
+  // Record the exact inputs, including working-tree documentation edits.
+  const inputs = [];
+  for (const document of parsedDocuments) {
+    const bytes = await readFile(document.absolutePath);
+    if (bytes.toString("utf8") !== document.markdown) {
+      fail(`Documentation changed during build: ${document.file}`);
+    }
+    inputs.push({ path: document.file, sha256: createHash("sha256").update(bytes).digest("hex") });
+  }
+  for (const asset of localAssets) {
+    const bytes = await readFile(asset.sourcePath);
+    inputs.push({ path: asset.relativePath, sha256: createHash("sha256").update(bytes).digest("hex") });
+  }
+  inputs.sort((left, right) => left.path.localeCompare(right.path));
+  let sourceRevision = null;
+  let sourceDirty = null;
+  try {
+    const git = (...args) => execFileSync("git", ["-C", sourceDirectory, ...args], {
+      encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    sourceRevision = git("rev-parse", "HEAD");
+    sourceDirty = git("status", "--porcelain", "--", sourceDirectory).length > 0;
+  } catch {
+    // --source also supports standalone Markdown directories.
+  }
+  const buildInfo = {
+    generated_at: new Date().toISOString(),
+    source_directory: sourceDirectory,
+    source_revision: sourceRevision,
+    source_dirty: sourceDirty,
+    content_sha256: createHash("sha256").update(JSON.stringify(inputs)).digest("hex"),
+    rendered_sha256: createHash("sha256").update(renderedPage).digest("hex"),
+    inputs,
+  };
+
   const outputName = path.basename(outputDirectory);
   if (
     path.dirname(outputDirectory) !== projectRoot ||
@@ -721,6 +758,7 @@ async function main() {
     await cp(asset.sourcePath, assetOutputPath);
   }
   await writeFile(path.join(outputDocsDirectory, "index.html"), renderedPage, "utf8");
+  await writeFile(path.join(outputDocsDirectory, "build-info.json"), JSON.stringify(buildInfo, null, 2) + "\n", "utf8");
 
   console.log(
     `Built ${parsedDocuments.length} Markdown documents and ${localAssets.length} local assets into ${path.relative(projectRoot, outputDirectory) || "."}`,

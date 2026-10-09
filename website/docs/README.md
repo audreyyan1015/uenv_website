@@ -1,7 +1,7 @@
 # UEnv 文档站开发说明
 
 文档站保留静态 HTML/CSS/JavaScript 实现，部署时将
-`/home/UEnv_用户手册` 中的公开 Markdown 编译进页面。
+规范仓库 `uenv_refactor/docs/user` 中的公开 Markdown 编译进页面。
 生成文件位于 `dist/`，不要手工编辑生成后的 HTML。
 
 ## 本地构建
@@ -10,7 +10,7 @@
 
 ```text
 workspace/
-├── uenv_pre_release/
+├── uenv_refactor/
 └── uenv_website/
 ```
 
@@ -18,6 +18,7 @@ workspace/
 
 ```bash
 npm ci
+export UENV_DOCS_SOURCE_DIR="$(realpath ../uenv_refactor/docs/user)"
 npm run check
 npm run build
 python3 -m http.server 8080 --directory dist
@@ -27,7 +28,7 @@ python3 -m http.server 8080 --directory dist
 `UENV_DOCS_SOURCE_DIR` 或 `--source` 指定 Markdown 目录：
 
 ```bash
-UENV_DOCS_SOURCE_DIR=/path/to/Docs/guide npm run build
+UENV_DOCS_SOURCE_DIR=/path/to/uenv_refactor/docs/user npm run build
 ```
 
 ## 文档配置
@@ -46,6 +47,7 @@ HTML 模板中复制第二份。
 - 本地图片、附件校验与复制
 - 代码高亮、分组侧栏、面包屑和完整页面顺序生成
 - 页面及标题级搜索入口生成
+- `docs/build-info.json` 中的来源提交、未提交状态、输入文件摘要和构建时间记录
 - H1 与导航标题一致性校验
 - 缺失文件、断链、孤立导航项、重复 slug、无效旧地址和重复 HTML ID 校验
 
