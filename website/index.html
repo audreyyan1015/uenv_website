@@ -232,25 +232,42 @@
         </div>
       </section>
 
-      <section class="quickstart-section" id="start">
-        <div class="section-shell section-block quickstart-grid">
-          <div class="quickstart-copy reveal">
-            <h2>启动 UEnv 核心服务</h2>
-            <p>准备匹配版本的发行包，部署 UEnv Hub、UEnv Server 与 UEnv Worker，再检查服务状态并运行首次评测。</p>
-            <div class="quickstart-points">
-              <span><i>01</i> 准备发布包</span>
-              <span><i>02</i> 一键安装</span>
-              <span><i>03</i> 验证服务</span>
-              <span><i>04</i> 确认 Worker 注册</span>
+      <section class="quickstart-section" id="start" aria-labelledby="quickstart-title">
+        <div class="section-shell quickstart-inner">
+          <div class="quickstart-heading reveal">
+            <div class="quickstart-intro">
+              <span class="quickstart-label">快速开始</span>
+              <h2 id="quickstart-title">启动 UEnv 核心服务</h2>
             </div>
-            <a class="text-link" href="./docs/?page=basic-deployment">查看完整部署指南 <span>↗</span></a>
+            <a class="button button-primary quickstart-action" href="./docs/?page=basic-deployment">
+              查看部署指南
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"></path></svg>
+            </a>
           </div>
 
-          <div class="feature-card reveal reveal-delay-1">
-            <h3>按当前版本部署</h3>
-            <p>完整单机部署包含 UEnv Hub、UEnv Server 与 UEnv Worker。发行包、模型和执行资源的准备要求见最新手册。</p>
-            <p><a class="text-link" href="./docs/?page=preparation">安装与运行环境准备 ↗</a></p>
-            <p><a class="text-link" href="./docs/?page=deployment-config">部署配置 ↗</a></p>
+          <div class="quickstart-guide reveal reveal-delay-1">
+            <ol class="quickstart-steps" aria-label="单机部署步骤">
+              <li>
+                <div class="quickstart-marker" aria-hidden="true"><span>01</span></div>
+                <h3>准备发行包</h3>
+                <p>确认系统与资源要求，下载并解压匹配版本的完整安装包。</p>
+              </li>
+              <li>
+                <div class="quickstart-marker" aria-hidden="true"><span>02</span></div>
+                <h3>安装核心服务</h3>
+                <p>使用单机配置运行安装脚本，部署 Hub、Server 与 Worker。</p>
+              </li>
+              <li>
+                <div class="quickstart-marker" aria-hidden="true"><span>03</span></div>
+                <h3>检查服务状态</h3>
+                <p>通过部署检查，确认各节点与整体状态均为 ready。</p>
+              </li>
+              <li>
+                <div class="quickstart-marker" aria-hidden="true"><span>04</span></div>
+                <h3>确认 Worker 注册</h3>
+                <p>核对 Worker 已注册并就绪，随后进入任务配置与首次评测。</p>
+              </li>
+            </ol>
           </div>
         </div>
       </section>
