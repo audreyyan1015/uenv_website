@@ -219,16 +219,50 @@
           <div>
             <h2>全流程可观测</h2>
           </div>
-          <p>Episode 全局进度、单条任务阶段步进、Worker 资源概览与列表，快速定位卡点和失败分支。</p>
+          <p>在 UEnv Console 中查看运行进度、结束结果与样本评分，并进入任务详情查看配置、结果与轨迹。</p>
         </div>
 
-        <div class="real-ui-frame reveal">
-          <div class="browser-bar">
-            <div class="window-dots"><span></span><span></span><span></span></div>
-            <div class="browser-url">http://uenv-server:8777/server</div>
-            
+        <div class="real-ui-frame console-static reveal" role="img" aria-label="新版 UEnv Console 静态界面示意：运行概览、结束结果和样本评分，展示数据为示例">
+          <aside class="console-static-sidebar">
+            <div class="console-static-brand"><span>◫</span> UEnv <small>v2</small></div>
+            <div class="console-static-workspace"><span>研</span><div><strong>研究工作空间</strong><small>UEnv Console</small></div></div>
+            <small class="console-static-nav-label">任务</small>
+            <div class="console-static-nav active"><span>▱</span>运行</div>
+            <small class="console-static-nav-label">资源</small>
+            <div class="console-static-nav"><span>▤</span>数据集</div>
+            <div class="console-static-nav"><span>◇</span>智能体</div>
+            <div class="console-static-nav"><span>⌘</span>工具</div>
+            <small class="console-static-nav-label">系统</small>
+            <div class="console-static-nav"><span>▦</span>集群</div>
+            <div class="console-static-help">使用指南 ↗</div>
+          </aside>
+          <div class="console-static-content">
+            <div class="console-static-topbar"><span>⌂ <i>›</i> 运行 <i>›</i> 详情</span><span class="console-static-demo">静态界面示意</span></div>
+            <div class="console-static-main">
+              <div class="console-static-page-title"><div><small>← 返回运行列表</small><h3>运行详情</h3><p>示例评测任务</p></div><span class="console-static-control">刷新</span></div>
+              <div class="console-static-panel">
+                <div class="console-static-panel-heading"><div><small>EPISODE 进度</small><h4>运行概览</h4></div><div><span class="console-static-status">● 已完成</span><span class="console-static-total">总计 <b>24</b> 个 Episode</span></div></div>
+                <div class="console-static-stages">
+                  <div><span class="console-static-step">01</span><b>0</b><strong>排队</strong><small>等待分配 Worker</small></div>
+                  <div><span class="console-static-step">02</span><b>0</b><strong>已派发</strong><small>已分配 Worker</small></div>
+                  <div><span class="console-static-step">03</span><b>24</b><strong>执行结束</strong><small>结束状态见下方统计</small></div>
+                </div>
+                <div class="console-static-outcomes"><div><strong>结束结果</strong><small>执行完成与评分分开展示</small></div><span>正常完成 <b>24</b></span><span>执行失败 <b>0</b></span><span>超时 <b>0</b></span><span>已取消 <b>0</b></span></div>
+              </div>
+              <div class="console-static-tabs"><span class="active">真实结果</span><span>运行配置</span><span>结果导出</span></div>
+              <div class="console-static-panel console-static-results">
+                <h4>样本与评分结果</h4>
+                <p>当前页 3 条结果 <span>正常评分 <b>3</b></span><span>评分异常 <b>0</b></span></p>
+                <div class="console-static-table"><div class="console-static-table-head"><span>样本 / Episode</span><span>执行状态</span><span>评分</span><span>详情</span></div>
+                  <div><strong>示例样本 001</strong><span class="console-static-status">已完成</span><span>通过 · reward 1</span><span class="console-static-detail">结果与轨迹</span></div>
+                  <div><strong>示例样本 002</strong><span class="console-static-status">已完成</span><span>通过 · reward 1</span><span class="console-static-detail">结果与轨迹</span></div>
+                  <div><strong>示例样本 003</strong><span class="console-static-status">已完成</span><span>通过 · reward 1</span><span class="console-static-detail">结果与轨迹</span></div>
+                </div>
+                <div class="console-static-pagination"><span>上一页</span><small>第 1 页 · 本页 3 条</small><span>下一页</span></div>
+              </div>
+              <div class="console-static-footer"><span>UEnv Console</span><span>展示数据为静态示例</span></div>
+            </div>
           </div>
-          <img src="./assets/uenv-console-real.png" alt="UEnv 真实可视化界面：Episode 全局进度、阶段步进与 Worker 运行状态" loading="lazy" />
         </div>
       </section>
 
